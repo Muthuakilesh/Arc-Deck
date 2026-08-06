@@ -1,75 +1,51 @@
+/*
+ * Design tokens. Sizes are phone-first: the reference device is a 320x568
+ * iPhone 5s, and the wider values are layered on in a min-width query below.
+ */
 :root {
+    --background: #05070f;
+    --accent: #3ddcff;
+    --accent-ink: #04121a;
+    --primary: #eef4ff;
+    --danger: #ff5f6d;
 
+    --text: #eef4ff;
+    --text-dim: rgba(238, 244, 255, .64);
+    --text-faint: rgba(238, 244, 255, .38);
 
-/* Theme */
+    --surface: rgba(21, 28, 46, .86);
+    --surface-raised: rgba(33, 43, 68, .92);
+    --surface-line: rgba(255, 255, 255, .09);
+    --surface-press: rgba(255, 255, 255, .16);
 
---primary:#ffffff;
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
 
---accent:#00ffff;
+    --shadow: 0 8px 24px rgba(0, 0, 0, .45);
 
---background:#050505;
+    --fast: 120ms ease;
+    --normal: 220ms ease;
 
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
 
+    /* Layout. --tap is the smallest touch target we allow anywhere. */
+    --gutter: 14px;
+    --stack: 12px;
+    --tap: 44px;
+    --topbar-height: 52px;
+    --dock-height: 64px;
 
-/* Glass */
+    /* Overridden to 0 on browsers without env(); iOS 11+ has it. */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
 
---glass-bg:
-rgba(255,255,255,0.08);
-
-
---glass-border:
-rgba(255,255,255,0.15);
-
-
-
---glass-highlight:
-rgba(255,255,255,0.25);
-
-
-
-/* Effects */
-
---blur:20px;
-
-
---radius-sm:12px;
-
---radius-md:20px;
-
---radius-lg:28px;
-
-
-
---shadow:
-0 20px 60px rgba(0,0,0,.45);
-
-
-
-/* Animation */
-
---fast:150ms ease;
-
---normal:300ms ease;
-
---slow:600ms ease;
-
-
-
-/* Font */
-
---font:
-"Segoe UI",
-Inter,
-Arial,
-sans-serif;
-
-
-
-/* Layout */
-
---topbar-height:70px;
-
---dock-height:80px;
-
-
+@media (min-width: 640px) {
+    :root {
+        --gutter: 28px;
+        --stack: 18px;
+        --topbar-height: 62px;
+        --dock-height: 72px;
+    }
 }

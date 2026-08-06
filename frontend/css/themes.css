@@ -1,33 +1,25 @@
-body
-{
+/*
+ * Accent presets. These used to be JSON files fetched at boot together with a
+ * wallpaper image that does not exist in the repo, which cost two requests and
+ * a 404 on every load; they are plain variable overrides now.
+ */
 
-color:
-var(--primary);
-
+html[data-theme="aurora"] {
+    --accent: #3ddcff;
+    --accent-ink: #04121a;
 }
 
-
-
-.theme-gold
-{
-
---accent:#d4af37;
-
-
---primary:#fff1b8;
-
-
+html[data-theme="ember"] {
+    --accent: #ffb648;
+    --accent-ink: #241502;
 }
 
+html[data-theme="nova"] {
+    --accent: #b98cff;
+    --accent-ink: #150a2b;
+}
 
-
-.theme-cyber
-{
-
---accent:#00ffff;
-
-
---primary:#ffffff;
-
-
+html[data-theme="mint"] {
+    --accent: #6ff2b6;
+    --accent-ink: #04231a;
 }

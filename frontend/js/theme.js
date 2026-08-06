@@ -1,79 +1,50 @@
 import state from "./state.js";
 
+const STORAGE_KEY = "arcdeck.theme";
+
+// Each entry is a `[data-theme]` block in css/themes.css.
+export const THEMES = [
+    { id: "aurora", label: "Aurora", swatch: "#3ddcff" },
+    { id: "ember", label: "Ember", swatch: "#ffb648" },
+    { id: "nova", label: "Nova", swatch: "#b98cff" },
+    { id: "mint", label: "Mint", swatch: "#6ff2b6" }
+];
 
 
-export async function loadTheme(name="default")
-{
-
-
-const response =
-await fetch(
-`./themes/${name}.json`
-);
-
-
-
-const theme =
-await response.json();
-
-
-
-state.theme =
-theme.name;
-
-
-
-applyTheme(theme);
-
-
-
-return theme;
-
-
+function isKnown(id) {
+    return THEMES.some(theme => theme.id === id);
 }
 
 
-
-
-function applyTheme(theme)
-{
-
-
-const root =
-document.documentElement;
-
-
-
-root.style.setProperty(
-"--primary",
-theme.colors.primary
-);
-
-
-
-root.style.setProperty(
-"--accent",
-theme.colors.accent
-);
-
-
-
-root.style.setProperty(
-"--background",
-theme.colors.background
-);
-
-
-
-if(theme.effects.blur)
-{
-
-root.style.setProperty(
-"--blur",
-`${theme.effects.blur}px`
-);
-
+export function currentTheme() {
+    return state.theme;
 }
 
 
+export function applyTheme(id) {
+    const name = isKnown(id) ? id : THEMES[0].id;
+
+    document.documentElement.setAttribute("data-theme", name);
+    state.theme = name;
+
+    try {
+        localStorage.setItem(STORAGE_KEY, name);
+    } catch (error) {
+        // Private mode on iOS throws on write; the theme just won't persist.
+    }
+
+    return name;
+}
+
+
+export function initTheme() {
+    let saved = null;
+
+    try {
+        saved = localStorage.getItem(STORAGE_KEY);
+    } catch (error) {
+        saved = null;
+    }
+
+    return applyTheme(saved);
 }

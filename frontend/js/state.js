@@ -42,7 +42,20 @@ gpu:0
 
 
 
-apps:[]
+apps:[],
+
+
+
+foreground:
+null,
+
+
+
+sessions:[],
+
+
+
+scenes:[]
 
 
 

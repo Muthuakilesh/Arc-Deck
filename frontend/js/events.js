@@ -1,31 +1,31 @@
-const listeners={};
+const listeners = {};
 
 
+export function on(event, callback) {
+    if (!listeners[event])
+        listeners[event] = [];
 
-export function on(event,callback)
-{
-
-if(!listeners[event])
-listeners[event]=[];
-
-
-listeners[event].push(callback);
-
+    listeners[event].push(callback);
 }
 
 
+export function off(event, callback) {
+    const list = listeners[event];
 
-export function emit(event,data)
-{
+    if (!list)
+        return;
 
-if(!listeners[event])
-return;
+    const index = list.indexOf(callback);
 
-
-listeners[event]
-.forEach(
-callback=>callback(data)
-);
+    if (index !== -1)
+        list.splice(index, 1);
+}
 
 
+export function emit(event, data) {
+    if (!listeners[event])
+        return;
+
+    // Handlers unsubscribe themselves once their view is gone, so iterate a copy.
+    listeners[event].slice().forEach(callback => callback(data));
 }

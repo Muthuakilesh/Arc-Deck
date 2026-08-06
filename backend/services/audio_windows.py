@@ -63,3 +63,58 @@ def set_level(percent):
 def set_mute(muted):
     _call(lambda endpoint: endpoint.SetMute(bool(muted), None))
     return get_state()
+
+
+def _sessions():
+    # Session objects belong to the thread that enumerated them, so they are
+    # never cached the way the master endpoint is.
+    if not _state.com_ready:
+        comtypes.CoInitialize()
+        _state.com_ready = True
+
+    for session in AudioUtilities.GetAllSessions():
+        if session.Process and session.SimpleAudioVolume:
+            yield session
+
+
+def _describe(session):
+    volume = session.SimpleAudioVolume
+
+    return {
+        "pid": session.Process.pid,
+        "process": session.Process.name(),
+        "volume": round(volume.GetMasterVolume() * 100),
+        "muted": bool(volume.GetMute())
+    }
+
+
+def get_sessions():
+    return [_describe(session) for session in _sessions()]
+
+
+def _find(pid):
+    for session in _sessions():
+        if session.Process.pid == pid:
+            return session
+
+    return None
+
+
+def set_session_level(pid, percent):
+    session = _find(pid)
+
+    if session is None:
+        return None
+
+    session.SimpleAudioVolume.SetMasterVolume(percent / 100.0, None)
+    return _describe(session)
+
+
+def set_session_mute(pid, muted):
+    session = _find(pid)
+
+    if session is None:
+        return None
+
+    session.SimpleAudioVolume.SetMute(bool(muted), None)
+    return _describe(session)

@@ -1,22 +1,18 @@
-import TopBar from "../components/topbar.js";
-import Dock from "../components/dock.js";
+import mountChrome from "../js/chrome.js";
 import HeroCard from "../components/heroCard.js";
 import GlassCard from "../components/glassCard.js";
-import LauncherCard from "../components/launcherCard.js";
-import MediaDrawer from "../components/mediaDrawer.js";
+import FocusCard from "../components/focusCard.js";
+import RunningStrip from "../components/runningStrip.js";
+import SceneStrip from "../components/sceneStrip.js";
 import VolumeControl from "../components/volumeControl.js";
-import Trackpad from "../components/trackpad.js";
 
-import { loadApps, launchApp } from "../js/apps.js";
-import { on } from "../js/events.js";
+import { off, on } from "../js/events.js";
 
-export default function Home()
-{
+export default function Home() {
     const page = document.createElement("div");
     page.className = "home page";
 
-    document.getElementById("topbar").replaceChildren(TopBar());
-    document.getElementById("dock").replaceChildren(Dock());
+    mountChrome();
 
     page.appendChild(HeroCard());
 
@@ -29,16 +25,26 @@ export default function Home()
     widgets.append(cpu, ram, disk);
     page.appendChild(widgets);
 
+    page.appendChild(FocusCard());
+    page.appendChild(SceneStrip());
+    page.appendChild(RunningStrip());
     page.appendChild(VolumeControl());
 
-    on("system:update", data => {
+    function update(data) {
+        if (!page.parentNode) {
+            off("system:update", update);
+            return;
+        }
+
         const cpuEl = document.getElementById("cpu");
         const ramEl = document.getElementById("ram");
         const diskEl = document.getElementById("disk");
         if (cpuEl) cpuEl.textContent = `${data.cpu}%`;
         if (ramEl) ramEl.textContent = `${data.ram}%`;
         if (diskEl && data.disk !== undefined) diskEl.textContent = `${data.disk}%`;
-    });
+    }
+
+    on("system:update", update);
 
     return page;
 }

@@ -1,6 +1,6 @@
-import TopBar from "../components/topbar.js";
-import Dock from "../components/dock.js";
+import mountChrome from "../js/chrome.js";
 import MediaDrawer from "../components/mediaDrawer.js";
+import Mixer from "../components/mixer.js";
 import VolumeControl from "../components/volumeControl.js";
 import { loadMedia } from "../js/media.js";
 
@@ -8,8 +8,8 @@ export default function MediaPage() {
     const page = document.createElement('div');
     page.className = 'media page';
 
-    document.getElementById('topbar').replaceChildren(TopBar());
-    document.getElementById('dock').replaceChildren(Dock());
+    mountChrome();
+
 
     const header = document.createElement('h2');
     header.textContent = 'Media';
@@ -18,6 +18,7 @@ export default function MediaPage() {
     const drawer = MediaDrawer();
     page.appendChild(drawer);
     page.appendChild(VolumeControl());
+    page.appendChild(Mixer());
 
     loadMedia();
 
