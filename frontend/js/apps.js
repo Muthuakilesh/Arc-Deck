@@ -1,62 +1,41 @@
-import {
-get,
-post
-}
-from "./api.js";
-
-
+import { get, post } from "./api.js";
 
 import state from "./state.js";
 
+import { emit } from "./events.js";
 
 
+export async function loadApps() {
+    const apps = await get("/apps");
 
+    state.apps = Array.isArray(apps) ? apps : [];
 
-export async function loadApps()
-{
-
-
-const apps =
-await get(
-"/apps"
-);
-
-
-
-state.apps =
-Array.isArray(apps) ? apps : [];
-
-
-return state.apps;
-
-
+    return state.apps;
 }
 
 
+// The socket only carries the names that are up, so the cached list is patched
+// rather than refetched on every tick.
+export function applyRunning(names) {
+    const running = {};
 
+    (names || []).forEach(name => {
+        running[String(name).toLowerCase()] = true;
+    });
 
+    state.apps.forEach(app => {
+        app.running = running[String(app.name).toLowerCase()] === true;
+    });
 
-export async function launchApp(name)
-{
-
-
-    return await post(
-        "/apps/open",
-        {
-            name:name
-        }
-    );
-
-
+    emit("apps:running", state.apps);
 }
 
-export async function runAppAction(name, action)
-{
-    return await post(
-        "/apps/action",
-        {
-            name,
-            action
-        }
-    );
+
+export function launchApp(name) {
+    return post("/apps/open", { name: name });
+}
+
+
+export function runAppAction(name, action) {
+    return post("/apps/action", { name: name, action: action });
 }

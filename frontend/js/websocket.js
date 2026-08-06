@@ -4,6 +4,8 @@ import state from "./state.js";
 
 import { emit, on } from "./events.js";
 
+import { applyRunning } from "./apps.js";
+
 
 let socket;
 
@@ -30,6 +32,10 @@ export function connectSocket() {
         state.system = data;
         state.connected = true;
         emit("system:update", data);
+    });
+
+    socket.on("apps_update", data => {
+        applyRunning(data && data.running);
     });
 
     // The server refused the old token, so reconnect with the one just paired.

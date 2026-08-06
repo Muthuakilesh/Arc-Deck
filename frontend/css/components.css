@@ -197,6 +197,8 @@
     padding: 12px var(--gutter) 16px;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     border-bottom: none;
+    /* Phones get no blur, so the panel has to be opaque enough on its own. */
+    background: #10162a;
 
     animation: sheetIn 220ms cubic-bezier(.16, 1, .3, 1);
 }
@@ -309,24 +311,112 @@
     color: var(--text-faint);
 }
 
-.launcher-actions {
-    margin-top: 10px;
-    width: 100%;
-
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.launcher-actions > * {
-    margin: 4px;
-    min-height: 36px;
-    padding: 0 10px;
-    font-size: .74rem;
-}
-
 .launcher-card:active {
     border-color: var(--accent);
+}
+
+.launcher-card.running {
+    border-color: rgba(61, 220, 255, .45);
+}
+
+/* The running dot rides on the status line so card heights stay equal. */
+.launcher-card.running .launcher-status {
+    color: var(--accent);
+}
+
+.launcher-card.running .launcher-status::before {
+    content: "\25CF";
+    margin-right: 5px;
+    font-size: .6rem;
+}
+
+/* ---------- running now ---------- */
+
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 6px -4px -4px;
+}
+
+.chip {
+    margin: 4px;
+    min-height: 36px;
+    padding: 0 12px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: .78rem;
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--surface-line);
+    border-radius: 999px;
+}
+
+.chip:active {
+    background: var(--surface-press);
+    transform: scale(.97);
+}
+
+/* ---------- app sheet ---------- */
+
+.sheet-row {
+    display: flex;
+    margin: 0 -4px;
+}
+
+.sheet-row > * {
+    flex: 1 1 0;
+    margin: 0 4px;
+    min-height: var(--tap);
+    padding: 0 12px;
+    font-size: .88rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    min-width: 0;
+}
+
+.sheet-primary {
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+}
+
+.sheet-secondary {
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--surface-line);
+}
+
+.sheet-row > *:active {
+    transform: scale(.97);
+}
+
+.sheet-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-gap: 8px;
+    gap: 8px;
+}
+
+.sheet-action {
+    min-height: var(--tap);
+    padding: 0 10px;
+    font-size: .8rem;
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--surface-line);
+    border-radius: var(--radius-sm);
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sheet-action:active {
+    background: var(--surface-press);
+    transform: scale(.97);
 }
 
 /* ---------- volume ---------- */

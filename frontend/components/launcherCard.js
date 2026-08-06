@@ -1,41 +1,43 @@
-document.createElement("div");
+import openAppSheet from "./appSheet.js";
+
+
+// A 320px card cannot hold five action buttons, so the card is a single tap
+// target and everything an app can do lives in its sheet.
 export default function LauncherCard(app) {
-	const card = document.createElement('div');
-	card.className = 'glass card launcher launcher-card';
+    const card = document.createElement("button");
 
-	const icon = document.createElement('div');
-	icon.className = 'launcher-icon';
-	icon.textContent = app.icon || '◈';
-	icon.setAttribute('aria-hidden', 'true');
+    card.type = "button";
+    card.className = "glass card launcher-card";
+    card.dataset.app = app.name || "";
 
-	const title = document.createElement('h3');
-	title.textContent = app.name || '';
+    const icon = document.createElement("div");
+    icon.className = "launcher-icon";
+    icon.textContent = app.icon || "\u25C8";
+    icon.setAttribute("aria-hidden", "true");
 
-	const status = document.createElement('div');
-	status.className = 'launcher-status';
-	status.textContent = app.running ? '● Running' : 'Launch';
+    const title = document.createElement("h3");
+    title.textContent = app.name || "";
 
-	card.appendChild(icon);
-	card.appendChild(title);
-	card.appendChild(status);
+    const status = document.createElement("div");
+    status.className = "launcher-status";
 
-	// optional action buttons for future dynamic actions
-	if (Array.isArray(app.actions) && app.actions.length) {
-		const actions = document.createElement('div');
-		actions.className = 'launcher-actions';
-		app.actions.forEach(a => {
-			const btn = document.createElement('button');
-			btn.type = 'button';
-			btn.className = 'control-button app-action-button';
-			btn.textContent = a.label || a.action;
-			btn.onclick = (e) => {
-				e.stopPropagation();
-				card.dispatchEvent(new CustomEvent('app:action', { detail: { app, action: a } }));
-			};
-			actions.appendChild(btn);
-		});
-		card.appendChild(actions);
-	}
+    const count = Array.isArray(app.actions) ? app.actions.length : 0;
 
-	return card;
+    card.appendChild(icon);
+    card.appendChild(title);
+    card.appendChild(status);
+
+    card.setRunning = running => {
+        app.running = running;
+        card.classList.toggle("running", running === true);
+        status.textContent = running
+            ? "Running"
+            : (count ? count + " actions" : "Launch");
+    };
+
+    card.setRunning(app.running === true);
+
+    card.onclick = () => openAppSheet(app);
+
+    return card;
 }

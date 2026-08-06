@@ -1,9 +1,12 @@
 import json
 import os
 import subprocess
+import time
 
 from .keyboard import press_hotkey, type_text
 from .media import media_action
+from .processes import is_running, process_name_for
+from .window_control import close_window, focus_window
 
 
 APPLICATIONS = {
@@ -20,6 +23,13 @@ LAUNCH_ARGUMENTS = {
 }
 
 
+# Every app gets these regardless of what apps.json declares.
+BUILTIN_COMMANDS = ("launch", "focus", "close")
+
+# The longest a single action may hold the request thread with delays.
+MAX_STEP_DELAY = 2.0
+
+
 DATA_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "apps.json")
 
 
@@ -34,94 +44,154 @@ def _load_data_file():
     return None
 
 
-def get_apps():
-    # Prefer a data file if present for dynamic app lists
-    data = _load_data_file()
-    apps = []
-    if isinstance(data, list):
-        for item in data:
-            apps.append({
-                "name": item.get("name"),
-                "path": item.get("path"),
-                "icon": item.get("icon"),
-                "category": item.get("category", "apps"),
-                "running": False,
-                "actions": item.get("actions", [])
-            })
-        return apps
+def _defaults():
+    return [
+        {"name": name, "path": path, "category": "apps"}
+        for name, path in APPLICATIONS.items()
+    ]
 
-    # Fallback to static mapping
-    for name, path in APPLICATIONS.items():
-        apps.append({
-            "name": name,
-            "path": path,
-            "icon": None,
-            "category": "apps",
-            "running": False,
-            "actions": []
-        })
-    return apps
+
+def _entries():
+    data = _load_data_file()
+
+    return data if isinstance(data, list) else _defaults()
+
+
+def find_app(name):
+    if not name:
+        return None
+
+    wanted = str(name).strip().lower()
+
+    for item in _entries():
+        if str(item.get("name", "")).strip().lower() == wanted:
+            return item
+
+    return None
+
+
+def _describe(item):
+    actions = item.get("actions")
+
+    return {
+        "name": item.get("name"),
+        "path": item.get("path"),
+        "icon": item.get("icon"),
+        "category": item.get("category", "apps"),
+        "process": process_name_for(item),
+        "running": is_running(item),
+        "actions": actions if isinstance(actions, list) else []
+    }
+
+
+def get_apps():
+    return [_describe(item) for item in _entries()]
 
 
 def open_app(name):
-    if not name:
-        return {"error": "name required"}
-
-    # Try data file first
-    data = _load_data_file()
-    path = None
-    if isinstance(data, list):
-        for item in data:
-            if str(item.get("name", "")).lower() == name.lower():
-                path = item.get("path")
-                break
-
-    # Fallback to static mapping
-    if not path:
-        path = APPLICATIONS.get(name.lower())
+    item = find_app(name)
+    path = item.get("path") if item else APPLICATIONS.get(str(name or "").lower())
 
     if not path:
-        return {"error": "Unknown application"}
+        return {"error": "Unknown application"}, 404
 
-    command = [os.path.expandvars(path)] + LAUNCH_ARGUMENTS.get(name.lower(), [])
+    command = [os.path.expandvars(path)] + LAUNCH_ARGUMENTS.get(str(name).lower(), [])
 
     try:
         subprocess.Popen(command, shell=False)
-        return {"opened": name}
+        return {"opened": item.get("name") if item else name}
     except OSError as e:
-        return {"error": str(e)}
+        return {"error": str(e)}, 500
+
+
+def _declared_commands(item):
+    """Commands this app published, so the phone cannot invent new ones."""
+    allowed = set(BUILTIN_COMMANDS)
+
+    for action in item.get("actions") or []:
+        if not isinstance(action, dict):
+            continue
+
+        command = action.get("command")
+
+        if isinstance(command, str):
+            allowed.add(command.strip().lower())
+        elif isinstance(command, list):
+            allowed.add(json.dumps(command, sort_keys=True))
+
+    return allowed
+
+
+def _run_step(item, command):
+    """One command from the grammar. Returns a Flask-shaped response."""
+    text = str(command).strip()
+    verb, _, argument = text.partition(":")
+    verb = verb.lower()
+
+    if verb == "launch":
+        return open_app(item.get("name"))
+
+    if verb == "focus":
+        return focus_window(process_name_for(item))
+
+    if verb == "close":
+        return close_window(process_name_for(item))
+
+    if verb == "hotkey":
+        keys = [key.strip() for key in argument.split("+") if key.strip()]
+        return press_hotkey(*keys)
+
+    if verb == "type":
+        return type_text(argument)
+
+    if verb == "media":
+        return media_action(argument)
+
+    if verb == "delay":
+        try:
+            seconds = min(float(argument) / 1000.0, MAX_STEP_DELAY)
+        except ValueError:
+            return {"error": "delay wants milliseconds"}, 400
+
+        time.sleep(max(seconds, 0))
+        return {"delayed": seconds}
+
+    return {"error": "Unsupported command: " + verb}, 400
+
+
+def _failed(result):
+    status = result[1] if isinstance(result, tuple) else 200
+    body = result[0] if isinstance(result, tuple) else result
+
+    return status >= 400 or (isinstance(body, dict) and "error" in body)
 
 
 def app_action(name, action):
     if not name or not action:
         return {"error": "name and action required"}, 400
 
-    raw_action = str(action)
-    action = raw_action.lower()
-    name = str(name).lower()
+    item = find_app(name)
 
-    # Discord-specific shortcuts
-    if name == "discord":
-        if action == "mute":
-            return send_shortcut("ctrl", "shift", "m")
-        if action == "deafen":
-            return send_shortcut("ctrl", "shift", "d")
+    if item is None:
+        return {"error": "Unknown application"}, 404
 
-    if action.startswith("media:"):
-        return media_action(action.split(":", 1)[1])
+    key = json.dumps(action, sort_keys=True) if isinstance(action, list) else str(action).strip().lower()
 
-    if action.startswith("hotkey:"):
-        keys = raw_action.split(":", 1)[1].split("+")
-        return send_shortcut(*[k.strip() for k in keys if k.strip()])
+    # Only what the PC published may run: an authenticated phone should not be
+    # able to type arbitrary text or press arbitrary keys on the desktop.
+    if key not in _declared_commands(item):
+        return {"error": "Action not available for this app"}, 403
 
-    if action.startswith("type:"):
-        return type_text(raw_action.split(":", 1)[1])
+    steps = action if isinstance(action, list) else [action]
+    last = {"ran": key}
 
-    # fallback: open app if action is launch
-    if action == "launch":
-        return open_app(name)
+    for step in steps:
+        last = _run_step(item, step)
 
-    return {"action": action, "name": name, "status": "unsupported"}
+        if _failed(last):
+            return last
+
+    return last
 
 
 def send_shortcut(*keys):

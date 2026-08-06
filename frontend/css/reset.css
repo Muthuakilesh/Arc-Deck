@@ -36,6 +36,10 @@ button {
     border: none;
     outline: none;
     background: none;
+
+    /* iOS styles buttons on its own terms unless this is off. */
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 input,
