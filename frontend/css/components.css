@@ -1076,6 +1076,149 @@
     color: var(--danger);
 }
 
+/* ---------- gamepad ---------- */
+
+.pad-profiles {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -4px 10px;
+}
+
+.pad-card {
+    padding: 14px;
+}
+
+.pad-stick {
+    position: relative;
+    width: 168px;
+    height: 168px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 1px solid var(--surface-line);
+    background: var(--surface-raised);
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.pad-nub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 66px;
+    height: 66px;
+    margin: -33px 0 0 -33px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: .85;
+    -webkit-transition: -webkit-transform var(--fast);
+    transition: transform var(--fast);
+}
+
+.pad-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 12px -4px -4px;
+}
+
+.pad-button {
+    flex: 1 1 28%;
+    margin: 4px;
+    min-height: var(--tap);
+    font-size: .8rem;
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--surface-line);
+    border-radius: var(--radius-sm);
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.pad-button.held {
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+
+.pad-note {
+    margin-top: 10px;
+    font-size: .74rem;
+    color: var(--text-faint);
+}
+
+/* ---------- screen peek ---------- */
+
+.screen-card {
+    padding: 10px;
+}
+
+.screen-shot {
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-sm);
+    background: #000;
+}
+
+.screen-status {
+    margin-top: 8px;
+    font-size: .74rem;
+    color: var(--text-faint);
+}
+
+/* ---------- app search ---------- */
+
+.app-search {
+    margin-bottom: var(--stack);
+    padding: 12px;
+}
+
+.search-field {
+    width: 100%;
+    min-height: var(--tap);
+    padding: 0 12px;
+    /* 16px or iOS zooms the whole page in when the field is focused. */
+    font-size: 16px;
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--surface-line);
+    border-radius: var(--radius-sm);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.search-results {
+    max-height: 240px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.search-hit {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 0 12px;
+    min-height: var(--tap);
+    text-align: left;
+    font-size: .85rem;
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--surface-line);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.search-hit:active {
+    background: var(--surface-press);
+}
+
+.search-empty {
+    margin-top: 10px;
+    font-size: .78rem;
+    color: var(--text-faint);
+}
+
 /* ---------- misc ---------- */
 
 #toast-container .card {

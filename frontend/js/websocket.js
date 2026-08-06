@@ -22,6 +22,17 @@ export function sendMouse(payload) {
 }
 
 
+// Gamepad button edges, for the same reason as the pointer: the gap between
+// pressing and the character moving is what makes a controller feel bad.
+export function sendPad(payload) {
+    if (!socket || !socket.connected)
+        return false;
+
+    socket.emit("pad", payload);
+    return true;
+}
+
+
 export function connectSocket() {
     socket = io({ auth: { token: getToken() } });
 

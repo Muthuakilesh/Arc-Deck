@@ -11,11 +11,14 @@ from routes.apps import apps_bp
 from routes.media import media_bp
 from routes.scenes import scenes_bp
 from routes.mouse import mouse_bp
+from routes.screen import screen_bp
+from routes.gamepad import gamepad_bp
 from routes.keyboard import keyboard_bp
 from routes.actions import actions_bp
 from routes.auth import auth_bp, require_token
 
 from services.auth import get_pin, is_valid_token
+from services.gamepad import hold_key, release_all
 from services.mouse import move_mouse, scroll_mouse
 from services.monitor import start_monitor
 from services.volume import backend as audio_backend
@@ -88,6 +91,16 @@ app.register_blueprint(
 )
 
 app.register_blueprint(
+    screen_bp,
+    url_prefix="/api/screen"
+)
+
+app.register_blueprint(
+    gamepad_bp,
+    url_prefix="/api/gamepad"
+)
+
+app.register_blueprint(
     actions_bp,
     url_prefix="/api/action"
 )
@@ -124,6 +137,26 @@ def on_mouse(data):
         return
 
     move_mouse(data.get("x", 0), data.get("y", 0))
+
+
+@socketio.on("pad")
+def on_pad(data):
+    """Game buttons, held down for as long as the thumb is on them.
+
+    Same reasoning as the pointer: a round trip between pressing and the
+    character starting to walk is the difference between a usable controller
+    and a frustrating one, so button edges ride the open socket.
+    """
+    if not isinstance(data, dict):
+        return
+
+    hold_key(data.get("key"), bool(data.get("down")))
+
+
+@socketio.on("disconnect")
+def on_disconnect():
+    """A phone that drops mid-sprint should not leave W held down on the PC."""
+    release_all()
 
 
 @app.route("/api/status")
