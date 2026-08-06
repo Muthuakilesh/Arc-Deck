@@ -10,6 +10,18 @@ import { applyRunning } from "./apps.js";
 let socket;
 
 
+// Pointer frames go out on the open socket; a POST each would be a round trip
+// per few pixels. Returns false when there is no socket, so the caller can fall
+// back to the HTTP endpoint.
+export function sendMouse(payload) {
+    if (!socket || !socket.connected)
+        return false;
+
+    socket.emit("mouse", payload);
+    return true;
+}
+
+
 export function connectSocket() {
     socket = io({ auth: { token: getToken() } });
 

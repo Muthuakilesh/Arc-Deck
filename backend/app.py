@@ -16,6 +16,7 @@ from routes.actions import actions_bp
 from routes.auth import auth_bp, require_token
 
 from services.auth import get_pin, is_valid_token
+from services.mouse import move_mouse, scroll_mouse
 from services.monitor import start_monitor
 from services.volume import backend as audio_backend
 
@@ -103,6 +104,26 @@ def on_connect(auth):
         return False
 
     return True
+
+
+@socketio.on("mouse")
+def on_mouse(data):
+    """Pointer movement over the socket that is already open.
+
+    A POST per touchmove means a connection, headers and a round trip for every
+    few pixels, which on a phone shows up as the pointer trailing your finger by
+    a noticeable amount. The socket is connected and authenticated already, so
+    dragging costs one small frame each. Only a connection that passed on_connect
+    can reach this.
+    """
+    if not isinstance(data, dict):
+        return
+
+    if data.get("type") == "scroll":
+        scroll_mouse(data.get("amount", 0))
+        return
+
+    move_mouse(data.get("x", 0), data.get("y", 0))
 
 
 @app.route("/api/status")

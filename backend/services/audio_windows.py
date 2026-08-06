@@ -13,6 +13,21 @@ from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 
+def _volume_of(device):
+    """Get the endpoint volume off whatever GetSpeakers returned.
+
+    Newer pycaw wraps the device in an AudioDevice that activates the interface
+    for you; older releases hand back the raw IMMDevice pointer, which is what
+    the widely copied `device.Activate(...)` snippet expects. Asking the wrapper
+    to Activate is the "'AudioDevice' object has no attribute 'Activate'" error.
+    """
+    try:
+        return device.EndpointVolume
+    except AttributeError:
+        interface = device.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        return interface.QueryInterface(IAudioEndpointVolume)
+
+
 class _ThreadState(threading.local):
     endpoint = None
     com_ready = False
@@ -29,9 +44,7 @@ def _endpoint():
         _state.com_ready = True
 
     if _state.endpoint is None:
-        speakers = AudioUtilities.GetSpeakers()
-        interface = speakers.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        _state.endpoint = interface.QueryInterface(IAudioEndpointVolume)
+        _state.endpoint = _volume_of(AudioUtilities.GetSpeakers())
 
     return _state.endpoint
 
