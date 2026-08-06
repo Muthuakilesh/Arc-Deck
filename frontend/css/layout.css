@@ -1,0 +1,189 @@
+#arcdeck
+{
+
+width:100vw;
+
+height:100vh;
+
+
+position:relative;
+
+overflow:hidden;
+
+
+background:
+var(--background);
+
+}
+
+
+
+
+/* Background */
+
+
+#wallpaper-layer,
+#gradient-layer,
+#noise-layer
+{
+
+position:absolute;
+
+inset:0;
+
+}
+
+
+
+#wallpaper-layer
+{
+
+background-size:
+cover;
+
+background-position:
+center;
+
+z-index:0;
+
+}
+
+
+
+#gradient-layer
+{
+
+background:
+
+radial-gradient(
+circle at top,
+rgba(255,255,255,.15),
+transparent 40%
+),
+
+linear-gradient(
+180deg,
+transparent,
+rgba(0,0,0,.85)
+);
+
+
+}
+
+
+
+#noise-layer
+{
+
+background-image:
+url("../images/ui/noise.png");
+
+
+opacity:.12;
+
+
+mix-blend-mode:
+overlay;
+
+
+}
+
+
+
+/* App */
+
+
+#topbar
+{
+
+position:absolute;
+
+top:0;
+
+left:0;
+
+right:0;
+
+height:
+var(--topbar-height);
+
+
+z-index:10;
+
+}
+
+
+
+#app-view
+{
+
+position:absolute;
+
+
+top:
+var(--topbar-height);
+
+
+bottom:
+var(--dock-height);
+
+
+left:0;
+
+right:0;
+
+
+padding:30px;
+
+
+overflow:auto;
+
+
+z-index:5;
+
+
+}
+
+
+
+#dock
+{
+
+position:absolute;
+
+
+bottom:20px;
+
+left:50%;
+
+
+transform:
+translateX(-50%);
+
+
+
+z-index:10;
+
+}
+
+/* Phone-first shell */
+#arcdeck {
+    isolation: isolate;
+}
+
+#gradient-layer {
+    background: radial-gradient(circle at 12% 6%, rgba(42, 216, 255, .18), transparent 28%),
+        radial-gradient(circle at 90% 18%, rgba(124, 92, 255, .17), transparent 26%),
+        linear-gradient(160deg, #10172c 0%, #070b16 47%, #030407 100%);
+}
+
+#app-view {
+    padding: 24px clamp(16px, 4vw, 48px) 120px;
+}
+
+@media (max-width: 640px) {
+    :root { --topbar-height: 64px; --dock-height: 88px; }
+    #topbar { padding: 10px 12px; }
+    #app-view { padding: 18px 16px 112px; }
+    #dock { bottom: 12px; width: calc(100% - 24px); }
+}

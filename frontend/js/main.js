@@ -1,0 +1,60 @@
+import router from "./router.js";
+
+import Home from "../views/home.js";
+import AppsPage from "../views/appsPage.js";
+import GamesPage from "../views/gamesPage.js";
+import MediaPage from "../views/mediaPage.js";
+import ControlPage from "../views/controlPage.js";
+import StatsPage from "../views/statsPage.js";
+import ClockPage from "../views/clockPage.js";
+
+import { loadWallpaper } from "./wallpaper.js";
+import { startClock } from "./clock.js";
+import { connectSocket } from "./websocket.js";
+
+// Shell initializes topbar, dock, system monitor and volume sync on import
+import "./shell.js";
+
+router.register("home", Home);
+router.register("apps", AppsPage);
+router.register("games", GamesPage);
+router.register("media", MediaPage);
+router.register("control", ControlPage);
+router.register("stats", StatsPage);
+router.register("clock", ClockPage);
+
+async function start() {
+    await loadWallpaper();
+    connectSocket();
+    router.navigate("home");
+    startClock();
+}
+
+// Surface startup errors into the UI so they are visible in the browser
+function showError(err) {
+    try {
+        const container = document.getElementById('app-view');
+        if (container) {
+            container.innerHTML = `<div class="error-overlay"><h2>Application error</h2><pre>${String(err).replace(/</g,'&lt;')}</pre></div>`;
+        } else {
+            document.body.insertAdjacentHTML('beforeend', `<div class="error-overlay"><h2>Application error</h2><pre>${String(err).replace(/</g,'&lt;')}</pre></div>`);
+        }
+    } catch (e) {
+        console.error('Failed to render error overlay', e);
+    }
+}
+
+window.addEventListener('error', (ev) => {
+    console.error('Unhandled error', ev.error || ev.message);
+    showError(ev.error || ev.message);
+});
+
+window.addEventListener('unhandledrejection', (ev) => {
+    console.error('Unhandled rejection', ev.reason);
+    showError(ev.reason);
+});
+
+start().catch(error => {
+    console.error("App failed to start:", error);
+    showError(error);
+});

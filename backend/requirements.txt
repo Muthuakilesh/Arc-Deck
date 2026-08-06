@@ -1,0 +1,6 @@
+flask
+flask-cors
+psutil
+pycaw
+comtypes
+pywin32

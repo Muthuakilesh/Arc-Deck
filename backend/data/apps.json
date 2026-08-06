@@ -1,0 +1,67 @@
+[
+  {
+    "name": "Chrome",
+    "path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "icon": "🌐",
+    "category": "apps",
+    "actions": [
+      { "label": "New tab", "command": "hotkey:ctrl+t" },
+      { "label": "Reopen tab", "command": "hotkey:ctrl+shift+t" },
+      { "label": "Address bar", "command": "hotkey:ctrl+l" }
+    ]
+  },
+  {
+    "name": "Discord",
+    "path": "C:\\Users\\%USERNAME%\\AppData\\Local\\Discord\\Update.exe",
+    "icon": "💬",
+    "category": "apps",
+    "actions": [
+      { "label": "Mute", "command": "mute" },
+      { "label": "Deafen", "command": "deafen" }
+    ]
+  },
+  {
+    "name": "VSCode",
+    "path": "C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+    "icon": "⌨️",
+    "category": "apps",
+    "actions": [
+      { "label": "Command palette", "command": "hotkey:ctrl+shift+p" },
+      { "label": "Run / debug", "command": "hotkey:f5" },
+      { "label": "Stop", "command": "hotkey:shift+f5" }
+    ]
+  },
+  {
+    "name": "Steam",
+    "path": "C:\\Program Files (x86)\\Steam\\Steam.exe",
+    "icon": "🎮",
+    "category": "games",
+    "actions": [
+      { "label": "Big Picture", "command": "hotkey:alt+enter" }
+    ]
+  },
+  {
+    "name": "Epic Games",
+    "path": "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Epic Games Launcher.lnk",
+    "icon": "⚡",
+    "category": "games"
+  },
+  {
+    "name": "Black Myth Wukong",
+    "path": "D:\\Games\\Black Myth - Wukong\\b1.exe",
+    "icon": "🐉",
+    "category": "games"
+  },
+  {
+    "name": "Elden Ring",
+    "path": "D:\\Games\\ELDEN RING\\Game\\ersc_launcher.exe",
+    "icon": "⚔️",
+    "category": "games"
+  },
+  {
+    "name": "Nightreign",
+    "path": "D:\\Games\\Elden Ring Nightreign\\Game\\nrsc_launcher.exe",
+    "icon": "🌙",
+    "category": "games"
+  }
+]

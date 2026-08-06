@@ -1,0 +1,75 @@
+:root {
+
+
+/* Theme */
+
+--primary:#ffffff;
+
+--accent:#00ffff;
+
+--background:#050505;
+
+
+
+/* Glass */
+
+--glass-bg:
+rgba(255,255,255,0.08);
+
+
+--glass-border:
+rgba(255,255,255,0.15);
+
+
+
+--glass-highlight:
+rgba(255,255,255,0.25);
+
+
+
+/* Effects */
+
+--blur:20px;
+
+
+--radius-sm:12px;
+
+--radius-md:20px;
+
+--radius-lg:28px;
+
+
+
+--shadow:
+0 20px 60px rgba(0,0,0,.45);
+
+
+
+/* Animation */
+
+--fast:150ms ease;
+
+--normal:300ms ease;
+
+--slow:600ms ease;
+
+
+
+/* Font */
+
+--font:
+"Segoe UI",
+Inter,
+Arial,
+sans-serif;
+
+
+
+/* Layout */
+
+--topbar-height:70px;
+
+--dock-height:80px;
+
+
+}

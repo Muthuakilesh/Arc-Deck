@@ -1,0 +1,20 @@
+{
+"name":"Elden Ring",
+
+"wallpaper":
+"eldenring.webp",
+
+"colors":
+{
+"primary":"#fff1b8",
+"accent":"#d4af37",
+"background":"#080604"
+},
+
+"effects":
+{
+"blur":25,
+"glow":true
+}
+
+}
