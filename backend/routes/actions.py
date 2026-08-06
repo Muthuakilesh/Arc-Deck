@@ -13,6 +13,21 @@ from services.power import run_power_action
 actions_bp = Blueprint("actions", __name__)
 
 
+# The old UI asked for these by name; apps.json now spells them as hotkeys.
+DISCORD_LEGACY = {
+    "mute": "hotkey:ctrl+shift+m",
+    "deafen": "hotkey:ctrl+shift+d"
+}
+
+
+def _envelope(result):
+    """Services answer like Flask views; this UI wants a success flag."""
+    body, code = result if isinstance(result, tuple) else (result, 200)
+    body = body if isinstance(body, dict) else {"result": body}
+
+    return dict(body, success="error" not in body), code
+
+
 @actions_bp.route("", methods=["POST"])
 def action():
     data = request.get_json(silent=True) or {}
@@ -32,16 +47,15 @@ def action():
             return {"success": True, **get_volume()}
 
         if command == "launch":
-            result = open_app(data.get("app", ""))
-            return {"success": "error" not in result, **result}
+            return _envelope(open_app(data.get("app", "")))
 
         if command == "media":
             result = media_action(data.get("key"))
             return {"success": isinstance(result, dict) and "error" not in result, **result}
 
         if command == "discord":
-            result = app_action("discord", data.get("action"))
-            return {"success": isinstance(result, dict) and "error" not in result, **result}
+            action_name = str(data.get("action", "")).lower()
+            return _envelope(app_action("discord", DISCORD_LEGACY.get(action_name, action_name)))
 
         if command == "power":
             result = run_power_action(data.get("action"))

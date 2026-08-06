@@ -1,5 +1,6 @@
 import router from "../js/router.js";
 import { THEMES, applyTheme, currentTheme } from "../js/theme.js";
+import { closeSheet, sheetIsOpen, sheetTitle, showSheet } from "./sheet.js";
 
 // Seven equal buttons on a 320px screen is 45px each with no room for labels,
 // so the dock keeps the five pages reached most often and the rest move into
@@ -42,27 +43,8 @@ function item(entry, className) {
 }
 
 
-function closeSheet() {
-    const open = document.querySelectorAll(".sheet, .sheet-backdrop");
-
-    for (let index = 0; index < open.length; index += 1)
-        open[index].parentNode.removeChild(open[index]);
-}
-
-
 function openSheet() {
-    closeSheet();
-
-    const backdrop = document.createElement("div");
-    backdrop.className = "sheet-backdrop";
-    backdrop.onclick = closeSheet;
-
-    const sheet = document.createElement("div");
-    sheet.className = "sheet glass card";
-
-    const title = document.createElement("p");
-    title.className = "eyebrow sheet-title";
-    title.textContent = "MORE";
+    const title = sheetTitle("MORE");
 
     const grid = document.createElement("div");
     grid.className = "sheet-grid";
@@ -81,10 +63,8 @@ function openSheet() {
         grid.appendChild(button);
     });
 
-    const themeTitle = document.createElement("p");
-    themeTitle.className = "eyebrow sheet-title";
+    const themeTitle = sheetTitle("ACCENT");
     themeTitle.style.marginTop = "14px";
-    themeTitle.textContent = "ACCENT";
 
     const themeGrid = document.createElement("div");
     themeGrid.className = "sheet-grid";
@@ -115,14 +95,7 @@ function openSheet() {
         themeGrid.appendChild(button);
     });
 
-    sheet.appendChild(title);
-    sheet.appendChild(grid);
-    sheet.appendChild(themeTitle);
-    sheet.appendChild(themeGrid);
-
-    const root = document.getElementById("arcdeck");
-    root.appendChild(backdrop);
-    root.appendChild(sheet);
+    showSheet([title, grid, themeTitle, themeGrid]);
 }
 
 
@@ -150,7 +123,7 @@ export default function Dock() {
         more.classList.add("active");
 
     more.onclick = () => {
-        if (document.querySelector(".sheet"))
+        if (sheetIsOpen())
             closeSheet();
         else
             openSheet();
