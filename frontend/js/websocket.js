@@ -1,69 +1,34 @@
-import {
-emit
-}
-from "./events.js";
+import { getToken } from "./api.js";
 
+import state from "./state.js";
+
+import { emit } from "./events.js";
 
 
 let socket;
 
 
+export function connectSocket() {
+    socket = io({ auth: { token: getToken() } });
 
-export function connectSocket()
-{
+    socket.on("connect", () => {
+        state.connected = true;
+        emit("connection", true);
+    });
 
+    socket.on("disconnect", () => {
+        state.connected = false;
+        emit("connection", false);
+    });
 
-socket =
-io();
+    socket.on("connect_error", () => {
+        state.connected = false;
+        emit("connection", false);
+    });
 
-
-
-socket.on(
-"connect",
-()=>{
-
-
-emit(
-"connection",
-true
-);
-
-
-}
-);
-
-
-
-socket.on(
-"disconnect",
-()=>{
-
-
-emit(
-"connection",
-false
-);
-
-
-}
-);
-
-
-
-socket.on(
-"system_update",
-data=>{
-
-
-emit(
-"system:update",
-data
-);
-
-
-}
-);
-
-
-
+    socket.on("system_update", data => {
+        state.system = data;
+        state.connected = true;
+        emit("system:update", data);
+    });
 }

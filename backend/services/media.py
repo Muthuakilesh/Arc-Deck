@@ -1,6 +1,8 @@
+# pyautogui calls sys.exit() when it cannot find a display/tkinter, so SystemExit
+# has to be caught too or importing it takes the whole server down.
 try:
     import pyautogui
-except Exception:
+except (Exception, SystemExit):
     pyautogui = None
 
 

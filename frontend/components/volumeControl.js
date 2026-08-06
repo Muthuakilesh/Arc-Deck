@@ -1,4 +1,6 @@
-import { get, post } from "../js/api.js";
+import state from "../js/state.js";
+import { on } from "../js/events.js";
+import { adjustVolume, changeVolume, setDragging, syncVolume, toggleMute } from "../js/volume.js";
 
 export default function VolumeControl() {
     const container = document.createElement("section");
@@ -9,7 +11,7 @@ export default function VolumeControl() {
             <button class="mute-button" type="button" data-mute aria-label="Mute volume">&#128266;</button>
         </div>
         <div class="volume-readout"><strong data-value>--%</strong><span data-status>Checking PC…</span></div>
-        <input class="volume-slider" data-slider type="range" min="0" max="100" value="50" aria-label="PC volume">
+        <input class="volume-slider" data-slider type="range" min="0" max="100" step="1" value="50" aria-label="PC volume">
         <div class="volume-buttons">
             <button class="control-button" type="button" data-adjust="-10">&#8722; 10</button>
             <button class="control-button primary-control" type="button" data-adjust="10">+ 10</button>
@@ -19,38 +21,66 @@ export default function VolumeControl() {
     const status = container.querySelector("[data-status]");
     const slider = container.querySelector("[data-slider]");
     const mute = container.querySelector("[data-mute]");
-    let currentVolume = 50;
+
+    function paintTrack(percent) {
+        slider.style.background = `linear-gradient(90deg, var(--accent) ${percent}%, rgba(255,255,255,.13) ${percent}%)`;
+    }
 
     function render(data) {
-        if (!data || typeof data.volume !== "number") return false;
-        currentVolume = data.volume;
+        if (!container.isConnected || !data || typeof data.volume !== "number")
+            return;
+
         value.textContent = `${data.volume}%`;
-        slider.value = data.volume;
-        slider.style.background = `linear-gradient(90deg, var(--accent) ${data.volume}%, rgba(255,255,255,.13) ${data.volume}%)`;
+
+        // The input is the source of truth while a finger is on it.
+        if (document.activeElement !== slider)
+            slider.value = data.volume;
+
+        paintTrack(data.volume);
+
         const muted = Boolean(data.muted);
         mute.innerHTML = muted ? "&#128263;" : "&#128266;";
         mute.setAttribute("aria-label", muted ? "Unmute volume" : "Mute volume");
+        mute.classList.toggle("is-muted", muted);
         status.textContent = muted ? "Muted" : "Connected to PC";
-        return true;
     }
 
-    async function send(body) {
-        status.textContent = "Updating…";
-        const data = await post("/action", body);
-        if (!render(data)) status.textContent = "PC connection failed";
-    }
+    // 'input' fires continuously on drag; 'change' alone only fires on release.
+    slider.addEventListener("input", () => {
+        const percent = Number(slider.value);
+        value.textContent = `${percent}%`;
+        paintTrack(percent);
+        changeVolume(percent);
+    });
+
+    ["touchstart", "mousedown"].forEach(name => {
+        slider.addEventListener(name, () => setDragging(true));
+    });
+
+    ["touchend", "touchcancel", "mouseup", "change"].forEach(name => {
+        slider.addEventListener(name, () => setDragging(false));
+    });
 
     container.querySelectorAll("[data-adjust]").forEach(button => {
-        button.addEventListener("click", () => send({
-            command: "volume",
-            value: Math.max(0, Math.min(100, currentVolume + Number(button.dataset.adjust)))
-        }));
+        button.addEventListener("click", () => {
+            status.textContent = "Updating…";
+            adjustVolume(Number(button.dataset.adjust));
+        });
     });
-    mute.addEventListener("click", () => send({ command: "mute" }));
-    slider.addEventListener("change", () => send({ command: "volume", value: Number(slider.value) }));
 
-    post("/action", { command: "volume_state" }).then(data => {
-        if (!render(data)) status.textContent = "PC connection failed";
+    mute.addEventListener("click", () => {
+        status.textContent = "Updating…";
+        toggleMute();
     });
+
+    on("volume:update", render);
+    on("volume:error", message => {
+        if (container.isConnected)
+            status.textContent = message;
+    });
+
+    render(state.volume);
+    syncVolume();
+
     return container;
 }
