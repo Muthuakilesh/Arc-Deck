@@ -6,6 +6,14 @@ except (Exception, SystemExit):
     pyautogui = None
 
 
+if pyautogui:
+    # pyautogui sleeps PAUSE seconds after *every* call, 0.1s by default. On a
+    # trackpad that is a tenth of a second of lag per movement, and they queue.
+    pyautogui.PAUSE = 0
+    # The pointer reaching a screen corner would otherwise raise mid-drag.
+    pyautogui.FAILSAFE = False
+
+
 def _unavailable():
     return {"error": "pyautogui not available"}, 500
 
@@ -17,6 +25,25 @@ def move_mouse(x, y):
     try:
         pyautogui.moveRel(x, y, duration=0)
         return {"status": "moved"}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+def press_mouse(button, down):
+    """Hold or release a button, which is how the phone drags something."""
+    if not pyautogui:
+        return _unavailable()
+
+    if button not in ("left", "right", "middle"):
+        return {"error": "invalid button"}, 400
+
+    try:
+        if down:
+            pyautogui.mouseDown(button=button)
+        else:
+            pyautogui.mouseUp(button=button)
+
+        return {"status": "down" if down else "up"}
     except Exception as e:
         return {"error": str(e)}, 500
 

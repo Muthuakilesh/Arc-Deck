@@ -87,6 +87,19 @@ usable process name never shows up there.
 Off Windows there is no foreground window to read; set
 `ARCDECK_FAKE_FOREGROUND=chrome.exe` to develop the card against a pretend one.
 
+## Trackpad
+
+One finger moves the pointer, a tap left-clicks, a two-finger tap right-clicks,
+two fingers dragging scroll, and double-tap-and-hold holds the left button down
+so the next move drags. Speed is a slider on the pad and is remembered.
+
+Pointer movement goes over the Socket.IO connection that is already open rather
+than a `POST` per touch, and moves are accumulated and sent once per animation
+frame — a request each was what made the pointer trail the finger. `pyautogui`'s
+default `PAUSE = 0.1` (a sleep after *every* call) is turned off for the same
+reason. The HTTP endpoints under `/api/mouse` still work and are used if the
+socket is down.
+
 ## App mixer
 
 The media page lists the apps Windows currently has an audio session for and
