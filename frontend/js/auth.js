@@ -1,5 +1,7 @@
 import { get, post, getToken, setToken, setUnauthorizedHandler } from "./api.js";
 
+import { emit } from "./events.js";
+
 let pending = null;
 
 
@@ -61,6 +63,9 @@ function promptForPin() {
         const parts = buildScreen(() => {
             pending = null;
             resolve();
+
+            // Already-mounted cards hold values from before the token expired.
+            emit("auth:paired", true);
         });
 
         document.body.appendChild(parts.screen);

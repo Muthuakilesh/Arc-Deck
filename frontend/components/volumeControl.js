@@ -79,6 +79,12 @@ export default function VolumeControl() {
             status.textContent = message;
     });
 
+    // Without this the card keeps the value (and "PIN required") from before the re-pair.
+    on("auth:paired", () => {
+        if (container.isConnected)
+            syncVolume();
+    });
+
     render(state.volume);
     syncVolume();
 
