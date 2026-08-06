@@ -15,6 +15,8 @@ const PRIMARY = [
 const OVERFLOW = [
     { icon: "\u26A1", page: "scenes", label: "Scenes" },
     { icon: "\u2726", page: "games", label: "Games" },
+    { icon: "\u25D8", page: "gamepad", label: "Gamepad" },
+    { icon: "\u25A3", page: "screen", label: "Screen" },
     { icon: "\u2637", page: "stats", label: "Stats" },
     { icon: "\u25F7", page: "clock", label: "Clock" }
 ];

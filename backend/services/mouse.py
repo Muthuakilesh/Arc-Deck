@@ -29,13 +29,36 @@ def move_mouse(x, y):
         return {"error": str(e)}, 500
 
 
-def press_mouse(button, down):
-    """Hold or release a button, which is how the phone drags something."""
+def move_mouse_to(x, y):
+    """Jump the pointer to a fraction of the screen, as tapping a still does.
+
+    The screen picture on the phone is scaled, so the phone sends where it
+    tapped as 0..1 of the width and height and the PC turns that into pixels.
+    """
+    try:
+        fx = min(max(float(x), 0.0), 1.0)
+        fy = min(max(float(y), 0.0), 1.0)
+    except (TypeError, ValueError):
+        return {"error": "invalid position"}, 400
+
     if not pyautogui:
         return _unavailable()
 
+    try:
+        width, height = pyautogui.size()
+        pyautogui.moveTo(int(width * fx), int(height * fy), duration=0)
+        return {"status": "moved"}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+def press_mouse(button, down):
+    """Hold or release a button, which is how the phone drags something."""
     if button not in ("left", "right", "middle"):
         return {"error": "invalid button"}, 400
+
+    if not pyautogui:
+        return _unavailable()
 
     try:
         if down:

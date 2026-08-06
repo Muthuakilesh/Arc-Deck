@@ -1,4 +1,5 @@
 import mountChrome from "../js/chrome.js";
+import AppSearch from "../components/appSearch.js";
 import LauncherGrid from "../components/launcherGrid.js";
 
 
@@ -12,6 +13,7 @@ export default function AppsPage() {
     header.textContent = "Apps";
 
     page.appendChild(header);
+    page.appendChild(AppSearch());
     page.appendChild(LauncherGrid(app => app.category !== "games"));
 
     return page;
