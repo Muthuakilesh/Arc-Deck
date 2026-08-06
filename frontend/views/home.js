@@ -29,6 +29,8 @@ export default function Home()
     widgets.append(cpu, ram, disk);
     page.appendChild(widgets);
 
+    page.appendChild(VolumeControl());
+
     on("system:update", data => {
         const cpuEl = document.getElementById("cpu");
         const ramEl = document.getElementById("ram");

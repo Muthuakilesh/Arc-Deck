@@ -11,9 +11,8 @@ import ClockPage from "../views/clockPage.js";
 import { loadWallpaper } from "./wallpaper.js";
 import { startClock } from "./clock.js";
 import { connectSocket } from "./websocket.js";
-
-// Shell initializes topbar, dock, system monitor and volume sync on import
-import "./shell.js";
+import { ensureAuthenticated } from "./auth.js";
+import initShell from "./shell.js";
 
 router.register("home", Home);
 router.register("apps", AppsPage);
@@ -25,6 +24,11 @@ router.register("clock", ClockPage);
 
 async function start() {
     await loadWallpaper();
+
+    // Nothing may talk to the PC until this phone is paired.
+    await ensureAuthenticated();
+
+    initShell();
     connectSocket();
     router.navigate("home");
     startClock();

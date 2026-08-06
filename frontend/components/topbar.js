@@ -1,87 +1,36 @@
-import {
-on
-}
-from "../js/events.js";
+import state from "../js/state.js";
 
-export default function TopBar()
-{
+import { on } from "../js/events.js";
 
 
-const bar =
-document.createElement("div");
-
-
-bar.className =
-"glass card topbar";
-
-
-bar.innerHTML = `
-
-<div class="brand">
-
-<span class="logo">
-◈
-</span>
-
-<span>
-ArcDeck
-</span>
-
-</div>
-
-
-<div class="status">
-
-<span class="online-dot"></span>
-
-<span id="connection">
-Connecting...
-</span>
-
-<span id="clock">
-00:00:00
-</span>
-
-</div>
-
-`;
-
-setTimeout(()=>{
-
-
-on(
-"connection",
-status=>{
-
-
-const text =
-document.getElementById(
-"connection"
-);
-
-
-
-if(text)
-{
-
-text.textContent =
-status
-?
-"Connected"
-:
-"Offline";
-
-
+function label(connected) {
+    return connected ? "Connected" : "Offline";
 }
 
 
+export default function TopBar() {
+    const bar = document.createElement("div");
+    bar.className = "glass card topbar";
 
-});
+    bar.innerHTML = `
+        <div class="brand">
+            <span class="logo">&#9672;</span>
+            <span>ArcDeck</span>
+        </div>
+        <div class="status">
+            <span class="online-dot"></span>
+            <span id="connection">${state.connected ? "Connected" : "Connecting&hellip;"}</span>
+            <span id="clock">00:00:00</span>
+        </div>`;
 
+    // Navigation rebuilds this bar, and 'connection' only fires on a socket change,
+    // so the initial text has to come from the state rather than a placeholder.
+    const text = bar.querySelector("#connection");
 
-},0);
+    on("connection", connected => {
+        if (bar.isConnected)
+            text.textContent = label(connected);
+    });
 
-return bar;
-
-
+    return bar;
 }

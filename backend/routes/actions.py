@@ -2,7 +2,7 @@
 
 from flask import Blueprint, request
 
-from services.volume import get_volume, set_volume, toggle_mute
+from services.volume import AudioError, get_volume, set_volume, toggle_mute
 from services.launcher import open_app, app_action
 from services.media import media_action
 from services.mouse import move_mouse, click_mouse
@@ -61,8 +61,10 @@ def action():
             else:
                 result = press_hotkey(key)
             return {"success": "error" not in result, **result}
-    except (TypeError, ValueError):
-        return {"success": False, "error": "invalid volume value"}, 400
+    except (TypeError, ValueError) as error:
+        return {"success": False, "error": str(error) or "invalid request"}, 400
+    except AudioError as error:
+        return {"success": False, "error": "Audio device unavailable: {0}".format(error)}, 503
     except Exception as error:
         return {"success": False, "error": str(error)}, 500
 

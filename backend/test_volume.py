@@ -1,27 +1,58 @@
-from services.volume import get_volume
+"""Platform-agnostic checks for the volume service.
 
-if __name__ == '__main__':
-    try:
-        from pycaw.pycaw import AudioUtilities
+Run from the backend directory: python -m unittest test_volume
+On Windows this exercises the real pycaw endpoint; elsewhere the simulated backend.
+"""
 
-        s = AudioUtilities.GetSpeakers()
-        print('GetSpeakers() ->', type(s))
+import unittest
+
+from services.volume import (
+    AudioError,
+    adjust_volume,
+    get_volume,
+    set_mute,
+    set_volume,
+    toggle_mute
+)
+
+
+class VolumeServiceTest(unittest.TestCase):
+
+    def setUp(self):
         try:
-            print('Has Activate?', hasattr(s, 'Activate'))
-        except Exception:
-            pass
+            self.original = get_volume()
+        except AudioError as error:
+            self.skipTest("no audio endpoint available: {0}".format(error))
 
-        all_dev = AudioUtilities.GetAllDevices()
-        print('GetAllDevices() ->', type(all_dev), 'len=', len(all_dev) if hasattr(all_dev, '__len__') else '?')
-        for i, d in enumerate(all_dev[:5]):
-            try:
-                print(i, type(d), 'attrs=', [a for a in dir(d) if not a.startswith('_')][:20])
-            except Exception as e:
-                print('err listing device', e)
+    def tearDown(self):
+        set_volume(self.original["volume"])
+        set_mute(self.original["muted"])
 
-        print('\nAttempting get_volume()...')
-        print(get_volume())
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print('ERROR:', e)
+    def test_state_shape(self):
+        state = get_volume()
+        self.assertIsInstance(state["volume"], int)
+        self.assertIsInstance(state["muted"], bool)
+
+    def test_set_volume_round_trips(self):
+        self.assertEqual(set_volume(42)["volume"], 42)
+
+    def test_set_volume_clamps(self):
+        self.assertEqual(set_volume(180)["volume"], 100)
+        self.assertEqual(set_volume(-20)["volume"], 0)
+
+    def test_set_volume_rejects_garbage(self):
+        with self.assertRaises(ValueError):
+            set_volume("loud")
+
+    def test_adjust_is_relative(self):
+        set_volume(50)
+        self.assertEqual(adjust_volume(-15)["volume"], 35)
+
+    def test_toggle_mute_flips(self):
+        set_mute(False)
+        self.assertTrue(toggle_mute()["muted"])
+        self.assertFalse(toggle_mute()["muted"])
+
+
+if __name__ == "__main__":
+    unittest.main()

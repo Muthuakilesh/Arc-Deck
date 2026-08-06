@@ -12,8 +12,11 @@ from routes.media import media_bp
 from routes.mouse import mouse_bp
 from routes.keyboard import keyboard_bp
 from routes.actions import actions_bp
+from routes.auth import auth_bp, require_token
 
+from services.auth import get_pin, is_valid_token
 from services.monitor import start_monitor
+from services.volume import backend as audio_backend
 
 
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
@@ -23,8 +26,7 @@ app = Flask(
     static_url_path=""
 )
 
-CORS(app)
-
+CORS(app, resources={r"/api/*": {"origins": "*"}}, allow_headers=["Content-Type", "X-ArcDeck-Token"])
 
 
 socketio = SocketIO(
@@ -32,6 +34,14 @@ socketio = SocketIO(
     cors_allowed_origins="*"
 )
 
+
+app.before_request(require_token)
+
+
+app.register_blueprint(
+    auth_bp,
+    url_prefix="/api/auth"
+)
 
 
 app.register_blueprint(
@@ -77,11 +87,23 @@ app.register_blueprint(
 start_monitor(socketio)
 
 
+@socketio.on("connect")
+def on_connect(auth):
+    """Stats are pushed over this socket, so it needs the same PIN gate as the API."""
+    token = auth.get("token") if isinstance(auth, dict) else None
+
+    if not is_valid_token(token):
+        return False
+
+    return True
+
+
 @app.route("/api/status")
 def status():
     return {
         "name": "ArcDeck",
-        "status": "online"
+        "status": "online",
+        "audio": audio_backend.name
     }
 
 
@@ -94,12 +116,12 @@ def index(path):
     return send_from_directory(app.static_folder, "index.html")
 
 
-
-
-
-if __name__=="__main__":
+if __name__ == "__main__":
+    print("ArcDeck pairing PIN: {0}".format(get_pin()))
+    print("Audio backend: {0}".format(audio_backend.name))
     socketio.run(
         app,
         host="0.0.0.0",
-        port=5000
+        port=5000,
+        allow_unsafe_werkzeug=True
     )

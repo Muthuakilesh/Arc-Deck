@@ -1,41 +1,22 @@
-import subprocess
-
-
-
-
-APPLICATIONS={
-
-
-"steam":
-r"C:\Program Files (x86)\Steam\Steam.exe",
-
-
-
-"discord":
-r"C:\Users\%USERNAME%\AppData\Local\Discord\Update.exe",
-
-
-
-"vscode":
-r"C:\Users\%USERNAME%\AppData\Local\Programs\Microsoft VS Code\Code.exe"
-
-
-}
-
-
-
-
-
-
-import subprocess
-import os
 import json
+import os
+import subprocess
+
+from .keyboard import press_hotkey, type_text
+from .media import media_action
 
 
 APPLICATIONS = {
     "steam": r"C:\Program Files (x86)\Steam\Steam.exe",
     "discord": r"C:\Users\%USERNAME%\AppData\Local\Discord\Update.exe",
     "vscode": r"C:\Users\%USERNAME%\AppData\Local\Programs\Microsoft VS Code\Code.exe"
+}
+
+
+# Discord ships a stub updater as its entry point; it only starts the client when
+# told which process to launch.
+LAUNCH_ARGUMENTS = {
+    "discord": ["--processStart", "Discord.exe"]
 }
 
 
@@ -48,7 +29,7 @@ def _load_data_file():
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
-    except Exception:
+    except (OSError, ValueError):
         pass
     return None
 
@@ -75,18 +56,23 @@ def get_apps():
             "name": name,
             "path": path,
             "icon": None,
-            "running": False
+            "category": "apps",
+            "running": False,
+            "actions": []
         })
     return apps
 
 
 def open_app(name):
+    if not name:
+        return {"error": "name required"}
+
     # Try data file first
     data = _load_data_file()
     path = None
     if isinstance(data, list):
         for item in data:
-            if item.get("name", "").lower() == name.lower():
+            if str(item.get("name", "")).lower() == name.lower():
                 path = item.get("path")
                 break
 
@@ -97,10 +83,12 @@ def open_app(name):
     if not path:
         return {"error": "Unknown application"}
 
+    command = [os.path.expandvars(path)] + LAUNCH_ARGUMENTS.get(name.lower(), [])
+
     try:
-        subprocess.Popen(os.path.expandvars(path))
+        subprocess.Popen(command, shell=False)
         return {"opened": name}
-    except Exception as e:
+    except OSError as e:
         return {"error": str(e)}
 
 
@@ -120,7 +108,6 @@ def app_action(name, action):
             return send_shortcut("ctrl", "shift", "d")
 
     if action.startswith("media:"):
-        from .media import media_action
         return media_action(action.split(":", 1)[1])
 
     if action.startswith("hotkey:"):
@@ -128,9 +115,7 @@ def app_action(name, action):
         return send_shortcut(*[k.strip() for k in keys if k.strip()])
 
     if action.startswith("type:"):
-        text = raw_action.split(":", 1)[1]
-        from .keyboard import type_text
-        return type_text(text)
+        return type_text(raw_action.split(":", 1)[1])
 
     # fallback: open app if action is launch
     if action == "launch":
@@ -140,8 +125,4 @@ def app_action(name, action):
 
 
 def send_shortcut(*keys):
-    try:
-        from .keyboard import press_hotkey
-        return press_hotkey(*keys)
-    except Exception as e:
-        return {"error": str(e)}
+    return press_hotkey(*keys)

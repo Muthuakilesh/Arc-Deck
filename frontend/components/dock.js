@@ -11,7 +11,7 @@ export default function Dock()
         { icon: "🎮", page: "games", label: "Games" },
         { icon: "🎵", page: "media", label: "Media" },
         { icon: "🖱️", page: "control", label: "Control" },
-        { icon: "📊", page: "stats", label: "Stats" }
+        { icon: "📊", page: "stats", label: "Stats" },
         { icon: "◷", page: "clock", label: "Clock" }
     ];
 

@@ -3,7 +3,7 @@ import Dock from "../components/dock.js";
 import { startSystemMonitor } from "./system.js";
 import { syncVolume } from "./volume.js";
 
-function initShell() {
+export default function initShell() {
     startSystemMonitor();
     syncVolume();
 
@@ -16,7 +16,3 @@ function initShell() {
     if (dock)
         dock.replaceChildren(Dock());
 }
-
-initShell();
-
-export default initShell;

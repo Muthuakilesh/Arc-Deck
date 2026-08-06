@@ -1,6 +1,15 @@
-import psutil
-import time
+import os
 import socket
+import time
+
+import psutil
+
+
+ROOT_PATH = os.environ.get("SystemDrive", "") + os.sep if os.name == "nt" else "/"
+
+# Prime psutil so cpu_percent can be read without blocking the request thread.
+psutil.cpu_percent(interval=None)
+
 
 def _get_local_ip():
     try:
@@ -16,9 +25,9 @@ def _get_local_ip():
 
 
 def get_system_stats():
-    cpu = psutil.cpu_percent(interval=0.5)
+    cpu = psutil.cpu_percent(interval=None)
     memory = psutil.virtual_memory()
-    disk = psutil.disk_usage('/')
+    disk = psutil.disk_usage(ROOT_PATH)
     uptime = time.time() - psutil.boot_time()
 
     gpus = []

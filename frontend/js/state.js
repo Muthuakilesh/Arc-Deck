@@ -23,7 +23,7 @@ false,
 
 volume:
 {
-value:0,
+volume:0,
 muted:false
 },
 

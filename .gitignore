@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Generated on first run: contains the pairing PIN and phone tokens
+backend/data/auth.json

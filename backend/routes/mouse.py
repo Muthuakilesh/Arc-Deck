@@ -13,52 +13,19 @@ mouse_bp = Blueprint(
 )
 
 
-
-@mouse_bp.route(
-"/move",
-methods=["POST"]
-)
+@mouse_bp.route("/move", methods=["POST"])
 def move():
+    data = request.get_json(silent=True) or {}
+    return move_mouse(data.get("x", 0), data.get("y", 0))
 
 
-    data=request.json
-
-
-    return move_mouse(
-        data["x"],
-        data["y"]
-    )
-
-
-
-
-@mouse_bp.route(
-"/click",
-methods=["POST"]
-)
+@mouse_bp.route("/click", methods=["POST"])
 def click():
+    data = request.get_json(silent=True) or {}
+    return click_mouse(data.get("button", "left"))
 
 
-    data=request.json
-
-
-    return click_mouse(
-        data["button"]
-    )
-
-
-
-
-@mouse_bp.route(
-"/scroll",
-methods=["POST"]
-)
+@mouse_bp.route("/scroll", methods=["POST"])
 def scroll():
-
-
-    data=request.json
-
-
-    return scroll_mouse(
-        data["amount"]
-    )
+    data = request.get_json(silent=True) or {}
+    return scroll_mouse(data.get("amount", 0))
