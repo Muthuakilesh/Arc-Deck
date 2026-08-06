@@ -1,195 +1,127 @@
-#arcdeck
-{
-
-width:100vw;
-
-height:100vh;
-
-
-position:relative;
-
-overflow:hidden;
-
-
-background:
-var(--background);
-
+/*
+ * Shell: a fixed topbar, a scrolling page area, and a fixed dock.
+ * Only #app-view scrolls, so the deck controls never move under a thumb.
+ */
+#arcdeck {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--background);
 }
-
-
-
-
-/* Background */
-
 
 #wallpaper-layer,
-#gradient-layer,
-#noise-layer
-{
-
-position:absolute;
-
-/* Safari 12 has no `inset` shorthand. */
-top:0;
-right:0;
-bottom:0;
-left:0;
-
+#gradient-layer {
+    position: absolute;
+    /* Safari 12 has no `inset` shorthand. */
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
 }
 
-
-
-#wallpaper-layer
-{
-
-background-size:
-cover;
-
-background-position:
-center;
-
-z-index:0;
-
-}
-
-
-
-#gradient-layer
-{
-
-background:
-
-radial-gradient(
-circle at top,
-rgba(255,255,255,.15),
-transparent 40%
-),
-
-linear-gradient(
-180deg,
-transparent,
-rgba(0,0,0,.85)
-);
-
-
-}
-
-
-
-#noise-layer
-{
-
-background-image:
-url("../images/ui/noise.png");
-
-
-opacity:.12;
-
-
-mix-blend-mode:
-overlay;
-
-
-}
-
-
-
-/* App */
-
-
-#topbar
-{
-
-position:absolute;
-
-top:0;
-
-left:0;
-
-right:0;
-
-height:
-var(--topbar-height);
-
-
-z-index:10;
-
-}
-
-
-
-#app-view
-{
-
-position:absolute;
-
-
-top:
-var(--topbar-height);
-
-
-bottom:
-var(--dock-height);
-
-
-left:0;
-
-right:0;
-
-
-padding:30px;
-
-
-overflow:auto;
-
-
-z-index:5;
-
-
-}
-
-
-
-#dock
-{
-
-position:absolute;
-
-
-bottom:20px;
-
-left:50%;
-
-
-transform:
-translateX(-50%);
-
-
-
-z-index:10;
-
-}
-
-/* Phone-first shell */
-#arcdeck {
-    isolation: isolate;
+#wallpaper-layer {
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
 }
 
 #gradient-layer {
-    background: radial-gradient(circle at 12% 6%, rgba(42, 216, 255, .18), transparent 28%),
-        radial-gradient(circle at 90% 18%, rgba(124, 92, 255, .17), transparent 26%),
-        linear-gradient(160deg, #10172c 0%, #070b16 47%, #030407 100%);
+    z-index: 1;
+    background: radial-gradient(circle at 8% 0%, rgba(61, 220, 255, .20), transparent 42%),
+        radial-gradient(circle at 100% 12%, rgba(126, 92, 255, .18), transparent 40%),
+        linear-gradient(170deg, #0b1225 0%, #070b18 52%, #04060d 100%);
+}
+
+#topbar,
+#dock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 20;
+}
+
+#topbar {
+    top: 0;
+    height: calc(var(--topbar-height) + var(--safe-top));
+    padding-top: var(--safe-top);
+}
+
+#dock {
+    bottom: 0;
+    height: calc(var(--dock-height) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
 }
 
 #app-view {
-    /* clamp() needs Safari 13.1; the first line is what Safari 12 keeps. */
-    padding: 24px 24px 120px;
-    padding: 24px clamp(16px, 4vw, 48px) 120px;
+    position: absolute;
+    top: calc(var(--topbar-height) + var(--safe-top));
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+
+    /* The dock floats over the page, so the last card needs room to clear it. */
+    padding: 14px var(--gutter) calc(var(--dock-height) + var(--safe-bottom) + 20px);
+
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 640px) {
-    :root { --topbar-height: 64px; --dock-height: 88px; }
-    #topbar { padding: 10px 12px; }
-    #app-view { padding: 18px 16px 112px; }
-    #dock { bottom: 12px; width: calc(100% - 24px); }
+/* Every page is a simple vertical stack; no flexbox gap, which Safari 12 lacks. */
+.page > * + * {
+    margin-top: var(--stack);
+}
+
+.page > h2 {
+    font-size: 1.35rem;
+    letter-spacing: .01em;
+}
+
+.page > h2 + * {
+    margin-top: 10px;
+}
+
+/*
+ * Card grids. `gap` inside *grid* is fine on Safari 12 (only flex gap is missing),
+ * and minmax(0, 1fr) is what stops a long value from pushing the row wider than
+ * the screen — the 320px overflow that clipped the Disk widget.
+ */
+.widgets,
+.launcher-grid {
+    display: grid;
+    grid-gap: 10px;
+    gap: 10px;
+}
+
+.widgets {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.launcher-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 600px) {
+    .widgets {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .launcher-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+#toast-container {
+    position: absolute;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: calc(var(--dock-height) + var(--safe-bottom) + 14px);
+    z-index: 40;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
 }

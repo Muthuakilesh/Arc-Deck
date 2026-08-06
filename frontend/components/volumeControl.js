@@ -23,7 +23,10 @@ export default function VolumeControl() {
     const mute = container.querySelector("[data-mute]");
 
     function paintTrack(percent) {
-        slider.style.background = `linear-gradient(90deg, var(--accent) ${percent}%, rgba(255,255,255,.13) ${percent}%)`;
+        // backgroundImage, not the `background` shorthand: the shorthand would
+        // reset the background-size that squeezes this into the 10px track.
+        slider.style.backgroundImage =
+            `linear-gradient(90deg, var(--accent) ${percent}%, rgba(255,255,255,.13) ${percent}%)`;
     }
 
     function render(data) {

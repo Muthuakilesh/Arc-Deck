@@ -36,6 +36,10 @@ async function walk(dir) {
     for (const entry of await readdir(dir, { withFileTypes: true })) {
         const path = join(dir, entry.name);
 
+        // Third-party bundles are shipped as published; they are not ours to lint.
+        if (entry.name === "vendor")
+            continue;
+
         if (entry.isDirectory())
             found.push(...await walk(path));
         else
@@ -114,6 +118,11 @@ function checkCss(path, source) {
 
         if (/(^|[\s;])appearance\s*:/.test(body) && !body.includes("-webkit-appearance"))
             failures.push(`${where}: 'appearance' without '-webkit-appearance' — iOS keeps the native control`);
+
+        // Safari 12 honours gap in grid but silently ignores it in flex, and it
+        // can't be feature-queried apart, so flex rows have to space with margins.
+        if (/display\s*:\s*(inline-)?flex/.test(body) && /(^|[\s;])(row-|column-)?gap\s*:/.test(body))
+            failures.push(`${where}: 'gap' in a flex container — Safari 12 ignores it; space children with margins`);
     }
 }
 
