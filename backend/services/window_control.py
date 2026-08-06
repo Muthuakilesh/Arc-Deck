@@ -1,3 +1,5 @@
+import os
+
 import psutil
 
 # Only Windows hosts have pywin32; the phone still needs the rest of the API to
@@ -49,6 +51,32 @@ def _top_level_windows(pids):
     win32gui.EnumWindows(visit, None)
 
     return windows
+
+
+def foreground():
+    """The process and title of the window the user is looking at right now."""
+    simulated = os.environ.get("ARCDECK_FAKE_FOREGROUND")
+
+    if simulated:
+        return {"process": simulated.lower(), "title": simulated, "simulated": True}
+
+    if not win32gui:
+        return None
+
+    try:
+        handle = win32gui.GetForegroundWindow()
+
+        if not handle:
+            return None
+
+        _, pid = win32process.GetWindowThreadProcessId(handle)
+
+        return {
+            "process": psutil.Process(pid).name().lower(),
+            "title": win32gui.GetWindowText(handle)
+        }
+    except (Exception, psutil.Error):
+        return None
 
 
 def focus_window(process_name):

@@ -35,7 +35,7 @@ export function connectSocket() {
     });
 
     socket.on("apps_update", data => {
-        applyRunning(data && data.running);
+        applyRunning(data && data.running, data && data.foreground);
     });
 
     // The server refused the old token, so reconnect with the one just paired.

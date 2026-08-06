@@ -2,10 +2,14 @@ from flask import Blueprint, request
 
 from services.volume import (
     AudioError,
+    SessionMissing,
+    get_sessions,
     get_volume,
     set_volume,
     adjust_volume,
     set_mute,
+    set_session_mute,
+    set_session_volume,
     toggle_mute
 )
 
@@ -22,6 +26,8 @@ def _guard(action):
         return action()
     except ValueError as error:
         return {"error": str(error)}, 400
+    except SessionMissing as error:
+        return {"error": str(error)}, 404
     except AudioError as error:
         return {"error": "Audio device unavailable: {0}".format(error)}, 503
 
@@ -52,3 +58,20 @@ def mute():
         return _guard(toggle_mute)
 
     return _guard(lambda: set_mute(muted))
+
+
+@audio_bp.route("/sessions", methods=["GET"])
+def sessions():
+    return _guard(lambda: {"sessions": get_sessions()})
+
+
+@audio_bp.route("/sessions/volume", methods=["POST"])
+def session_volume():
+    data = request.get_json(silent=True) or {}
+    return _guard(lambda: set_session_volume(data.get("pid"), data.get("value")))
+
+
+@audio_bp.route("/sessions/mute", methods=["POST"])
+def session_mute():
+    data = request.get_json(silent=True) or {}
+    return _guard(lambda: set_session_mute(data.get("pid"), data.get("muted")))

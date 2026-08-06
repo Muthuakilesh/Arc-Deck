@@ -330,6 +330,109 @@
     font-size: .6rem;
 }
 
+/* ---------- in focus ---------- */
+
+.focus-card {
+    border-color: rgba(61, 220, 255, .35);
+}
+
+.focus-name {
+    margin-top: 2px;
+    font-size: 1.05rem;
+}
+
+.focus-title {
+    margin-top: 2px;
+    font-size: .72rem;
+    color: var(--text-faint);
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.focus-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-gap: 8px;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.focus-action {
+    min-height: var(--tap);
+    padding: 0 10px;
+    font-size: .78rem;
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--surface-line);
+    border-radius: var(--radius-sm);
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.focus-action:active {
+    background: var(--surface-press);
+    transform: scale(.97);
+}
+
+.focus-more {
+    color: var(--accent);
+}
+
+/* ---------- app mixer ---------- */
+
+.mix-empty {
+    margin-top: 8px;
+    font-size: .78rem;
+    color: var(--text-faint);
+}
+
+.mix-row {
+    margin-top: 12px;
+}
+
+.mix-head {
+    display: flex;
+    align-items: center;
+}
+
+.mix-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: .82rem;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mix-value {
+    margin: 0 8px;
+    font-size: .78rem;
+    color: var(--text-dim);
+}
+
+.mix-mute {
+    width: var(--tap);
+    height: var(--tap);
+    flex: 0 0 auto;
+    font-size: 1rem;
+    background: transparent;
+    border: 0;
+}
+
+.mix-mute.is-muted {
+    opacity: .55;
+}
+
+/* The row already carries the app name, so its slider sits tighter. */
+.mix-row .volume-slider {
+    margin-top: 2px;
+}
+
 /* ---------- running now ---------- */
 
 .chip-row {

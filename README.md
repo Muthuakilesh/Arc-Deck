@@ -49,3 +49,20 @@ how a macro like the YouTube one above is written.
 deck watches to show an app as running, and what `focus` and `close` act on. If
 it is left out it is guessed from `path`, which does not work for `.lnk`
 shortcuts.
+
+## In focus
+
+The home screen puts the actions of whatever window is in front on the PC at the
+top, so the usual case takes no navigation. It only appears when the foreground
+app is one of the apps in `apps.json` — matched on `process`, so an app with no
+usable process name never shows up there.
+
+Off Windows there is no foreground window to read; set
+`ARCDECK_FAKE_FOREGROUND=chrome.exe` to develop the card against a pretend one.
+
+## App mixer
+
+The media page lists the apps Windows currently has an audio session for and
+gives each one its own slider and mute, which is how you turn the game down
+without turning the call down. Off Windows the same dummy backend that fakes the
+master volume fakes a few sessions.

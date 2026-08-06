@@ -3,6 +3,8 @@ import time
 
 import psutil
 
+from .window_control import foreground
+
 
 # Scanning every process is the expensive part of an app poll, so the phone and
 # the socket broadcast share one snapshot instead of walking the table twice.
@@ -61,6 +63,28 @@ def is_running(app):
     name = process_name_for(app)
 
     return bool(name) and name in _snapshot()
+
+
+def app_for_process(apps, process_name):
+    """The configured app a raw executable name belongs to, if any."""
+    if not process_name:
+        return None
+
+    for app in apps:
+        if process_name_for(app) == process_name.lower():
+            return app.get("name")
+
+    return None
+
+
+def foreground_state(apps):
+    """What the user is looking at, named as one of their configured apps."""
+    window = foreground()
+
+    if not window:
+        return None
+
+    return dict(window, app=app_for_process(apps, window.get("process")))
 
 
 def running_names(apps):
