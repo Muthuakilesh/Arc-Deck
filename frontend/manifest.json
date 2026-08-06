@@ -1,15 +1,25 @@
 {
-"name":"ArcDeck",
-
-"short_name":"ArcDeck",
-
-"start_url":"./index.html",
-
-"display":"standalone",
-
-"background_color":"#050505",
-
-"theme_color":"#00ffff",
-
-"icons":[]
+    "name": "ArcDeck",
+    "short_name": "ArcDeck",
+    "description": "Phone control deck for your PC.",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#05070f",
+    "theme_color": "#05070f",
+    "icons": [
+        {
+            "src": "./images/ui/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./images/ui/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ]
 }

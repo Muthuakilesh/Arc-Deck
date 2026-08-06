@@ -8,6 +8,11 @@ function label(connected) {
 }
 
 
+function now() {
+    return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+
 export default function TopBar() {
     const bar = document.createElement("div");
     bar.className = "glass card topbar";
@@ -20,7 +25,7 @@ export default function TopBar() {
         <div class="status">
             <span class="online-dot"></span>
             <span id="connection">${state.connected ? "Connected" : "Connecting&hellip;"}</span>
-            <span id="clock">00:00:00</span>
+            <span id="clock">${now()}</span>
         </div>`;
 
     // Navigation rebuilds this bar, and 'connection' only fires on a socket change,
