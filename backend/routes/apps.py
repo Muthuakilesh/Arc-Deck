@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 
 from services.launcher import app_action, get_apps, open_app
-from services.processes import running_names
+from services.processes import foreground_state, running_names
 
 apps_bp = Blueprint("apps", __name__)
 
@@ -13,7 +13,8 @@ def apps():
 
 @apps_bp.route("/running", methods=["GET"])
 def running():
-    return {"running": running_names(get_apps())}
+    apps = get_apps()
+    return {"running": running_names(apps), "foreground": foreground_state(apps)}
 
 
 @apps_bp.route("/open", methods=["POST"])

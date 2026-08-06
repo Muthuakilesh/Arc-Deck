@@ -1,6 +1,7 @@
 import mountChrome from "../js/chrome.js";
 import HeroCard from "../components/heroCard.js";
 import GlassCard from "../components/glassCard.js";
+import FocusCard from "../components/focusCard.js";
 import RunningStrip from "../components/runningStrip.js";
 import VolumeControl from "../components/volumeControl.js";
 
@@ -23,6 +24,7 @@ export default function Home() {
     widgets.append(cpu, ram, disk);
     page.appendChild(widgets);
 
+    page.appendChild(FocusCard());
     page.appendChild(RunningStrip());
     page.appendChild(VolumeControl());
 

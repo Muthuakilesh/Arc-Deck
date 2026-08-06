@@ -2,7 +2,7 @@ import threading
 import time
 
 from .launcher import get_apps
-from .processes import running_names
+from .processes import foreground_state, running_names
 from .stats import get_system_stats
 
 
@@ -21,7 +21,11 @@ def start_monitor(socketio):
             socketio.emit("system_update", get_system_stats())
 
             if tick % APPS_EVERY == 0:
-                socketio.emit("apps_update", {"running": running_names(get_apps())})
+                apps = get_apps()
+                socketio.emit("apps_update", {
+                    "running": running_names(apps),
+                    "foreground": foreground_state(apps)
+                })
 
             tick += 1
             time.sleep(PUSH_INTERVAL)
