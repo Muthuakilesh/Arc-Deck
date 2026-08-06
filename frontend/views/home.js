@@ -3,6 +3,7 @@ import HeroCard from "../components/heroCard.js";
 import GlassCard from "../components/glassCard.js";
 import FocusCard from "../components/focusCard.js";
 import RunningStrip from "../components/runningStrip.js";
+import SceneStrip from "../components/sceneStrip.js";
 import VolumeControl from "../components/volumeControl.js";
 
 import { off, on } from "../js/events.js";
@@ -25,6 +26,7 @@ export default function Home() {
     page.appendChild(widgets);
 
     page.appendChild(FocusCard());
+    page.appendChild(SceneStrip());
     page.appendChild(RunningStrip());
     page.appendChild(VolumeControl());
 

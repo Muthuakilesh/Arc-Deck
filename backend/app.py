@@ -9,6 +9,7 @@ from routes.system import system_bp
 from routes.audio import audio_bp
 from routes.apps import apps_bp
 from routes.media import media_bp
+from routes.scenes import scenes_bp
 from routes.mouse import mouse_bp
 from routes.keyboard import keyboard_bp
 from routes.actions import actions_bp
@@ -65,6 +66,12 @@ app.register_blueprint(
 app.register_blueprint(
     media_bp,
     url_prefix="/api/media"
+)
+
+
+app.register_blueprint(
+    scenes_bp,
+    url_prefix="/api/scenes"
 )
 
 

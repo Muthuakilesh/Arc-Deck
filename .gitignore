@@ -5,3 +5,6 @@ venv/
 
 # Generated on first run: contains the pairing PIN and phone tokens
 backend/data/auth.json
+
+# Written by the phone: the scenes you build on it
+backend/data/scenes.json

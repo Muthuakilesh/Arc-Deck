@@ -50,6 +50,33 @@ deck watches to show an app as running, and what `focus` and `close` act on. If
 it is left out it is guessed from `path`, which does not work for `.lnk`
 shortcuts.
 
+## Scenes
+
+A scene is one button that runs a sequence across several apps, and unlike
+`apps.json` it is built on the phone (More → Scenes) and stored in
+`backend/data/scenes.json`. A step is either an app plus one of the actions that
+app already declares, or a pause:
+
+```json
+{
+  "id": "a146e4cf",
+  "name": "Game night",
+  "icon": "⚡",
+  "pinned": true,
+  "steps": [
+    { "app": "Discord", "command": "hotkey:ctrl+shift+m", "label": "Mute" },
+    { "delay": 500 },
+    { "app": "Elden Ring", "command": "launch" }
+  ]
+}
+```
+
+The editor only ever offers commands already in `apps.json`, and the server
+checks that again on save and once more on every run, so a scene can only
+rearrange buttons the deck already had. A scene holds up to 20 steps, a pause up
+to 2000ms, and a run stops at the first step that fails and reports its number.
+Pinned scenes get a one-tap chip on the home screen.
+
 ## In focus
 
 The home screen puts the actions of whatever window is in front on the PC at the

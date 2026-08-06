@@ -89,3 +89,8 @@ export function post(endpoint, data) {
         body: JSON.stringify(data || {})
     });
 }
+
+
+export function del(endpoint) {
+    return request(endpoint, { method: "DELETE" });
+}

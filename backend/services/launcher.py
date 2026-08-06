@@ -122,6 +122,18 @@ def _declared_commands(item):
     return allowed
 
 
+def command_key(command):
+    """How a command is written in an app's allowlist."""
+    if isinstance(command, list):
+        return json.dumps(command, sort_keys=True)
+
+    return str(command).strip().lower()
+
+
+def declares(item, command):
+    return command_key(command) in _declared_commands(item)
+
+
 def _run_step(item, command):
     """One command from the grammar. Returns a Flask-shaped response."""
     text = str(command).strip()
@@ -175,11 +187,11 @@ def app_action(name, action):
     if item is None:
         return {"error": "Unknown application"}, 404
 
-    key = json.dumps(action, sort_keys=True) if isinstance(action, list) else str(action).strip().lower()
+    key = command_key(action)
 
     # Only what the PC published may run: an authenticated phone should not be
     # able to type arbitrary text or press arbitrary keys on the desktop.
-    if key not in _declared_commands(item):
+    if not declares(item, action):
         return {"error": "Action not available for this app"}, 403
 
     steps = action if isinstance(action, list) else [action]
