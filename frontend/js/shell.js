@@ -1,18 +1,9 @@
-import TopBar from "../components/topbar.js";
-import Dock from "../components/dock.js";
+import mountChrome from "./chrome.js";
 import { startSystemMonitor } from "./system.js";
 import { syncVolume } from "./volume.js";
 
 export default function initShell() {
     startSystemMonitor();
     syncVolume();
-
-    const topbar = document.getElementById("topbar");
-    const dock = document.getElementById("dock");
-
-    if (topbar)
-        topbar.replaceChildren(TopBar());
-
-    if (dock)
-        dock.replaceChildren(Dock());
+    mountChrome();
 }

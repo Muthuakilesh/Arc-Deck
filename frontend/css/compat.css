@@ -1,0 +1,25 @@
+/* Safari 12 is the newest an iPhone 5s runs, and it honours `gap` in grid but
+   ignores it in flexbox. js/compat.js measures that and puts .no-flex-gap on
+   <html>, so these margins only apply on the phones that need them. */
+
+.no-flex-gap .brand > * + * { margin-left: 12px; }
+.no-flex-gap .status > * + * { margin-left: 15px; }
+.no-flex-gap .dock > * + * { margin-left: 15px; }
+.no-flex-gap .launcher > * + * { margin-top: 12px; }
+.no-flex-gap .launcher-actions > * + * { margin-left: 10px; }
+.no-flex-gap .volume > * + * { margin-top: 18px; }
+.no-flex-gap .volume-readout > * + * { margin-left: 16px; }
+.no-flex-gap .media-drawer > * + * { margin-top: 18px; }
+.no-flex-gap .keyboard-card > * + * { margin-top: 16px; }
+.no-flex-gap .power-card > * + * { margin-top: 14px; }
+.no-flex-gap .focus-card > * + * { margin-top: 28px; }
+.no-flex-gap .buttons > * + * { margin-left: 20px; }
+
+/* Below 640px these rows change gap, and the pages switch from grid to flex. */
+@media (max-width: 640px) {
+    .no-flex-gap .status > * + * { margin-left: 8px; }
+    .no-flex-gap .dock > * + * { margin-left: 8px; }
+    .no-flex-gap .buttons > * + * { margin-left: 12px; }
+    .no-flex-gap .media.page > * + *,
+    .no-flex-gap .control.page > * + * { margin-top: 16px; }
+}

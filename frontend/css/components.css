@@ -312,7 +312,10 @@ translateY(-8px);
 
 .error-overlay {
     position: absolute;
-    inset: 80px 40px 80px 40px;
+    top: 80px;
+    right: 40px;
+    bottom: 80px;
+    left: 40px;
     background: rgba(0,0,0,0.85);
     color: #ffdddd;
     padding: 20px;
@@ -640,6 +643,7 @@ color:white;
 }
 
 .topbar {
+    padding: 14px 20px;
     padding: 14px clamp(16px, 3vw, 30px);
 }
 
@@ -681,6 +685,7 @@ color:white;
 }
 
 .volume-readout strong {
+    font-size: 2.6rem;
     font-size: clamp(2.4rem, 10vw, 3.6rem);
     letter-spacing: -.07em;
     line-height: 1;
@@ -840,9 +845,9 @@ color:white;
 
 .clock-page { display: grid; grid-template-columns: 1.25fr .75fr; gap: 20px; align-items: stretch; }
 .clock-hero { --clock-hue: 210; min-height: 330px; display: flex; flex-direction: column; justify-content: end; overflow: hidden; position: relative; background: linear-gradient(135deg, hsl(var(--clock-hue) 85% 58% / .55), hsl(calc(var(--clock-hue) + 75) 82% 48% / .3) 45%, rgba(7,10,22,.82) 75%); }
-.clock-hero::before { content: ""; position: absolute; inset: -30%; background: repeating-linear-gradient(135deg, rgba(255,255,255,.12) 0 2px, transparent 2px 24px); transform: rotate(8deg); }
+.clock-hero::before { content: ""; position: absolute; top: -30%; right: -30%; bottom: -30%; left: -30%; background: repeating-linear-gradient(135deg, rgba(255,255,255,.12) 0 2px, transparent 2px 24px); transform: rotate(8deg); }
 .clock-hero > * { position: relative; z-index: 1; }
-.clock-time { font-size: clamp(4rem, 13vw, 8rem); font-weight: 800; letter-spacing: -.09em; line-height: .9; }
+.clock-time { font-size: 4.2rem; font-size: clamp(4rem, 13vw, 8rem); font-weight: 800; letter-spacing: -.09em; line-height: .9; }
 .clock-date { margin: 16px 0 0; color: rgba(255,255,255,.76); }
 .focus-card { display: flex; flex-direction: column; justify-content: space-between; gap: 28px; }
 .focus-card h2 { margin: 8px 0 0; font-size: 3.4rem; letter-spacing: -.06em; }

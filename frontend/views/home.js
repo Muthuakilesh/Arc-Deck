@@ -1,5 +1,4 @@
-import TopBar from "../components/topbar.js";
-import Dock from "../components/dock.js";
+import mountChrome from "../js/chrome.js";
 import HeroCard from "../components/heroCard.js";
 import GlassCard from "../components/glassCard.js";
 import LauncherCard from "../components/launcherCard.js";
@@ -15,8 +14,8 @@ export default function Home()
     const page = document.createElement("div");
     page.className = "home page";
 
-    document.getElementById("topbar").replaceChildren(TopBar());
-    document.getElementById("dock").replaceChildren(Dock());
+    mountChrome();
+
 
     page.appendChild(HeroCard());
 

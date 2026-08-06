@@ -1,5 +1,4 @@
-import TopBar from "../components/topbar.js";
-import Dock from "../components/dock.js";
+import mountChrome from "../js/chrome.js";
 import Trackpad from "../components/trackpad.js";
 import VolumeControl from "../components/volumeControl.js";
 import { post } from "../js/api.js";
@@ -8,8 +7,8 @@ export default function ControlPage() {
     const page = document.createElement('div');
     page.className = 'control page';
 
-    document.getElementById('topbar').replaceChildren(TopBar());
-    document.getElementById('dock').replaceChildren(Dock());
+    mountChrome();
+
 
     const header = document.createElement('h2');
     header.textContent = 'Controls';
@@ -58,7 +57,7 @@ function createKeyboardInput() {
             status.textContent = 'Sent to active field.';
             textarea.value = '';
         } else {
-            status.textContent = result?.error || 'Failed to send text.';
+            status.textContent = (result && result.error) || 'Failed to send text.';
         }
         setTimeout(() => { status.textContent = ''; }, 2000);
     };
@@ -70,7 +69,7 @@ function createKeyboardInput() {
     container.querySelectorAll('[data-key]').forEach(key => {
         key.onclick = async () => {
             const result = await post('/keyboard/hotkey', { keys: [key.dataset.key] });
-            status.textContent = result && !result.error ? `${key.textContent} sent.` : (result?.error || 'Key failed.');
+            status.textContent = result && !result.error ? `${key.textContent} sent.` : ((result && result.error) || 'Key failed.');
             setTimeout(() => { status.textContent = ''; }, 1600);
         };
     });
@@ -98,7 +97,7 @@ function createPowerCard() {
             if (!window.confirm(`${action === 'shutdown' ? 'Shut down' : action[0].toUpperCase() + action.slice(1)} this PC?`)) return;
             status.textContent = 'Sending…';
             const result = await post('/system/power', { action });
-            status.textContent = result && !result.error ? `PC ${action} command sent.` : (result?.error || 'Command failed.');
+            status.textContent = result && !result.error ? `PC ${action} command sent.` : ((result && result.error) || 'Command failed.');
         };
     });
     return container;

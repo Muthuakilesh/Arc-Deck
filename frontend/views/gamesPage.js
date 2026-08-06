@@ -1,5 +1,4 @@
-import TopBar from "../components/topbar.js";
-import Dock from "../components/dock.js";
+import mountChrome from "../js/chrome.js";
 import { loadApps, launchApp } from "../js/apps.js";
 import LauncherCard from "../components/launcherCard.js";
 
@@ -7,8 +6,8 @@ export default function GamesPage() {
     const page = document.createElement('div');
     page.className = 'games page';
 
-    document.getElementById('topbar').replaceChildren(TopBar());
-    document.getElementById('dock').replaceChildren(Dock());
+    mountChrome();
+
 
     const header = document.createElement('h2');
     header.textContent = 'Games';
