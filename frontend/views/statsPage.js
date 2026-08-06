@@ -1,5 +1,4 @@
-import TopBar from "../components/topbar.js";
-import Dock from "../components/dock.js";
+import mountChrome from "../js/chrome.js";
 import GlassCard from "../components/glassCard.js";
 import { on } from "../js/events.js";
 
@@ -7,8 +6,8 @@ export default function StatsPage() {
     const page = document.createElement('div');
     page.className = 'stats page';
 
-    document.getElementById('topbar').replaceChildren(TopBar());
-    document.getElementById('dock').replaceChildren(Dock());
+    mountChrome();
+
 
     const header = document.createElement('h2');
     header.textContent = 'System Stats';

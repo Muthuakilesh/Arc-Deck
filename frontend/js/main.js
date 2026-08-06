@@ -12,6 +12,7 @@ import { loadWallpaper } from "./wallpaper.js";
 import { startClock } from "./clock.js";
 import { connectSocket } from "./websocket.js";
 import { ensureAuthenticated } from "./auth.js";
+import applyCompatFlags from "./compat.js";
 import initShell from "./shell.js";
 
 router.register("home", Home);
@@ -23,6 +24,8 @@ router.register("stats", StatsPage);
 router.register("clock", ClockPage);
 
 async function start() {
+    applyCompatFlags();
+
     await loadWallpaper();
 
     // Nothing may talk to the PC until this phone is paired.

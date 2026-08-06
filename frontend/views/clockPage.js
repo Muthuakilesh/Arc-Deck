@@ -1,11 +1,10 @@
-import TopBar from "../components/topbar.js";
-import Dock from "../components/dock.js";
+import mountChrome from "../js/chrome.js";
 
 export default function ClockPage() {
     const page = document.createElement("div");
     page.className = "clock-page page";
-    document.getElementById("topbar").replaceChildren(TopBar());
-    document.getElementById("dock").replaceChildren(Dock());
+
+    mountChrome();
     page.innerHTML = `
         <section class="clock-hero glass card"><p class="eyebrow">ARC FOCUS</p><time class="clock-time">--:--</time><p class="clock-date">Loading date…</p></section>
         <section class="focus-card glass card"><div><p class="eyebrow">FOCUS TIMER</p><h2 data-timer>25:00</h2></div><div class="focus-controls"><button type="button" data-start>Start</button><button type="button" data-reset>Reset</button><button type="button" data-focus>Focus mode</button></div><p data-status>Ready for a focused session.</p></section>`;
