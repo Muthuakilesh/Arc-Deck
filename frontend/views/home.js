@@ -1,5 +1,4 @@
 import mountChrome from "../js/chrome.js";
-import router from "../js/router.js";
 import HeroCard from "../components/heroCard.js";
 import GlassCard from "../components/glassCard.js";
 import FocusCard from "../components/focusCard.js";
@@ -9,7 +8,6 @@ import VolumeControl from "../components/volumeControl.js";
 import LauncherCard from "../components/launcherCard.js";
 import { closeSheet, sheetTitle, showSheet } from "../components/sheet.js";
 import { THEMES, UI_STYLES, applyTheme, applyUiStyle, currentTheme, currentUiStyle } from "../js/theme.js";
-import { loadMedia, mediaAction } from "../js/media.js";
 
 import { off, on } from "../js/events.js";
 import { getFavoriteNames, getRecentNames, loadApps } from "../js/apps.js";
@@ -52,8 +50,6 @@ const DEFAULT_LAYOUT = [
     { id: "volume", label: "Volume", visible: true },
     { id: "checklist", label: "Checklist", visible: true },
     { id: "streak", label: "Streak", visible: true },
-    { id: "shortcuts", label: "Shortcuts", visible: true },
-    { id: "miniMedia", label: "Mini Media", visible: true },
     { id: "notes", label: "Notes", visible: true }
 ];
 
@@ -178,7 +174,7 @@ function moveLayoutItem(layout, fromIndex, toIndex) {
 
 export default function Home() {
     const page = document.createElement("div");
-    page.className = "home page";
+    page.className = "home page ios-modular-page";
 
     let layout = loadLayout();
     let freeLayout = loadFreeLayout();
@@ -186,24 +182,18 @@ export default function Home() {
     let checklist = loadJson(CHECKLIST_KEY, []);
     let notes = String(loadJson(NOTES_KEY, "") || "");
     let streak = loadJson(STREAK_KEY, { count: 0, lastDate: "" });
-    let mediaState = { title: "No media detected", artist: "", playing: false };
 
     const nodes = {};
     const dragState = { id: "", pointerId: 0, offsetX: 0, offsetY: 0 };
 
     mountChrome();
 
-    const customize = document.createElement("section");
-    customize.className = "home-customize card glass";
-    customize.innerHTML = "<p class='eyebrow'>LAYOUT</p><div class='home-customize-row'><span>Customize visible widgets and order.</span><button type='button' class='control-button icon-only-button' title='Customize home layout' aria-label='Customize home layout' data-customize>\u2699</button></div><p class='eyebrow home-look-title'>LOOK</p><div class='home-look-block'><p class='home-look-label'>Accent</p><div class='home-look-chips' data-theme-chips></div></div><div class='home-look-block'><p class='home-look-label'>Style</p><div class='home-look-chips' data-style-chips></div></div><p class='eyebrow home-look-title'>PROFILE</p><div class='home-customize-row'><span>Share your setup as JSON.</span><button type='button' class='control-button icon-only-button' title='Export profile JSON' aria-label='Export profile JSON' data-export-profile>\u2B06</button><button type='button' class='control-button icon-only-button' title='Import profile JSON' aria-label='Import profile JSON' data-import-profile>\u2B07</button></div>";
-    page.appendChild(customize);
+    const settingsBar = document.createElement("div");
+    settingsBar.className = "home-settings-bar";
+    settingsBar.innerHTML = "<button type='button' class='control-button icon-only-button home-settings-button' title='Home settings' aria-label='Home settings' data-home-settings>\u2699</button>";
+    page.appendChild(settingsBar);
 
-    const themeChips = customize.querySelector("[data-theme-chips]");
-    const styleChips = customize.querySelector("[data-style-chips]");
-    const exportProfileButton = customize.querySelector("[data-export-profile]");
-    const importProfileButton = customize.querySelector("[data-import-profile]");
-
-    const renderLookChips = () => {
+    const renderLookChips = (themeChips, styleChips) => {
         themeChips.innerHTML = "";
         styleChips.innerHTML = "";
 
@@ -217,7 +207,7 @@ export default function Home() {
             button.textContent = theme.label;
             button.onclick = () => {
                 applyTheme(theme.id);
-                renderLookChips();
+                renderLookChips(themeChips, styleChips);
             };
 
             dot.className = "home-look-dot";
@@ -236,20 +226,18 @@ export default function Home() {
             button.textContent = style.label;
             button.onclick = () => {
                 applyUiStyle(style.id);
-                renderLookChips();
+                renderLookChips(themeChips, styleChips);
             };
 
             styleChips.appendChild(button);
         });
     };
 
-    renderLookChips();
-
     const widgetHost = document.createElement("div");
     widgetHost.className = "home-widget-host";
     page.appendChild(widgetHost);
 
-    exportProfileButton.onclick = async () => {
+    const exportProfile = async exportButton => {
         const settings = {};
 
         PROFILE_KEYS.forEach(key => {
@@ -264,9 +252,9 @@ export default function Home() {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             try {
                 await navigator.clipboard.writeText(payload);
-                exportProfileButton.textContent = "\u2713";
+                exportButton.textContent = "\u2713";
                 window.setTimeout(() => {
-                    exportProfileButton.textContent = "\u2B06";
+                    exportButton.textContent = "\u2B06";
                 }, 900);
                 return;
             } catch (error) {
@@ -277,7 +265,7 @@ export default function Home() {
         window.prompt("Copy your Arc-Deck profile JSON", payload);
     };
 
-    importProfileButton.onclick = () => {
+    const importProfile = importButton => {
         const raw = window.prompt("Paste Arc-Deck profile JSON");
 
         if (!raw)
@@ -288,9 +276,9 @@ export default function Home() {
             const settings = parsed && parsed.settings;
 
             if (!settings || typeof settings !== "object") {
-                importProfileButton.textContent = "!";
+                importButton.textContent = "!";
                 window.setTimeout(() => {
-                    importProfileButton.textContent = "\u2B07";
+                    importButton.textContent = "\u2B07";
                 }, 900);
                 return;
             }
@@ -304,9 +292,9 @@ export default function Home() {
             applyUiStyle(localStorage.getItem("arcdeck.uiStyle"));
             window.location.reload();
         } catch (error) {
-            importProfileButton.textContent = "!";
+            importButton.textContent = "!";
             window.setTimeout(() => {
-                importProfileButton.textContent = "\u2B07";
+                importButton.textContent = "\u2B07";
             }, 900);
         }
     };
@@ -316,7 +304,7 @@ export default function Home() {
 
     // small summary widgets
     const widgets = document.createElement("div");
-    widgets.className = "widgets";
+    widgets.className = "widgets module module-stats";
     const cpu = GlassCard({ title: "CPU", content: "<h2 id='cpu'>0%</h2>" });
     const ram = GlassCard({ title: "RAM", content: "<h2 id='ram'>0%</h2>" });
     const disk = GlassCard({ title: "Disk", content: "<h2 id='disk'>0%</h2>" });
@@ -325,7 +313,7 @@ export default function Home() {
     nodes.stats.dataset.widgetId = "stats";
 
     const favoritesSection = document.createElement("section");
-    favoritesSection.className = "quick-apps card glass";
+    favoritesSection.className = "quick-apps card glass module module-favorites";
     favoritesSection.innerHTML = "<p class='eyebrow'>FAVORITES</p>";
     const favoritesGrid = document.createElement("div");
     favoritesGrid.className = "quick-apps-grid";
@@ -334,7 +322,7 @@ export default function Home() {
     nodes.favorites.dataset.widgetId = "favorites";
 
     const recentsSection = document.createElement("section");
-    recentsSection.className = "quick-apps card glass";
+    recentsSection.className = "quick-apps card glass module module-recents";
     recentsSection.innerHTML = "<p class='eyebrow'>RECENT APPS</p>";
     const recentsGrid = document.createElement("div");
     recentsGrid.className = "quick-apps-grid";
@@ -352,7 +340,7 @@ export default function Home() {
     nodes.volume.dataset.widgetId = "volume";
 
     const checklistSection = document.createElement("section");
-    checklistSection.className = "utility-card card glass";
+    checklistSection.className = "utility-card card glass module module-utility";
     checklistSection.innerHTML = "<p class='eyebrow'>CHECKLIST</p><div class='utility-checklist-list' data-checklist-list></div><div class='utility-checklist-add'><input type='text' maxlength='60' placeholder='Add task'><button type='button' class='control-button icon-only-button' title='Add task' aria-label='Add task'>+</button></div>";
     const checklistList = checklistSection.querySelector("[data-checklist-list]");
     const checklistInput = checklistSection.querySelector("input");
@@ -436,7 +424,7 @@ export default function Home() {
     nodes.checklist.dataset.widgetId = "checklist";
 
     const streakSection = document.createElement("section");
-    streakSection.className = "utility-card card glass";
+    streakSection.className = "utility-card card glass module module-utility";
     streakSection.innerHTML = "<p class='eyebrow'>STREAK</p><h3 data-streak-count>0 days</h3><p class='utility-streak-note' data-streak-note>Check in daily to build your streak.</p><button type='button' class='control-button icon-only-button' title='Check in today' aria-label='Check in today' data-streak-checkin>\uD83D\uDD25</button>";
     const streakCount = streakSection.querySelector("[data-streak-count]");
     const streakNote = streakSection.querySelector("[data-streak-note]");
@@ -482,69 +470,8 @@ export default function Home() {
     nodes.streak = streakSection;
     nodes.streak.dataset.widgetId = "streak";
 
-    const shortcutsSection = document.createElement("section");
-    shortcutsSection.className = "utility-card card glass";
-    shortcutsSection.innerHTML = "<p class='eyebrow'>SHORTCUTS</p><div class='utility-shortcuts' data-shortcuts></div>";
-    const shortcutsGrid = shortcutsSection.querySelector("[data-shortcuts]");
-    [
-        { icon: "\u25A6", label: "Apps", page: "apps" },
-        { icon: "\u266A", label: "Media", page: "media" },
-        { icon: "\u25CE", label: "Control", page: "control" },
-        { icon: "\u25A3", label: "Screen", page: "screen" },
-        { icon: "\u25F7", label: "Clock", page: "clock" },
-        { icon: "\u26A1", label: "Scenes", page: "scenes" }
-    ].forEach(shortcut => {
-        const button = document.createElement("button");
-
-        button.type = "button";
-        button.className = "utility-shortcut";
-        button.title = shortcut.label;
-        button.setAttribute("aria-label", shortcut.label);
-        button.innerHTML = `<span class='utility-shortcut-icon'>${shortcut.icon}</span><span class='utility-shortcut-label'>${shortcut.label}</span>`;
-        button.onclick = () => {
-            router.navigate(shortcut.page);
-        };
-
-        shortcutsGrid.appendChild(button);
-    });
-    nodes.shortcuts = shortcutsSection;
-    nodes.shortcuts.dataset.widgetId = "shortcuts";
-
-    const miniMediaSection = document.createElement("section");
-    miniMediaSection.className = "utility-card card glass";
-    miniMediaSection.innerHTML = "<p class='eyebrow'>MINI MEDIA</p><h3 data-mini-media-title>No media detected</h3><p class='utility-media-artist' data-mini-media-artist> </p><div class='utility-media-controls'><button type='button' class='control-button icon-only-button' title='Previous track' aria-label='Previous track' data-media-prev>\u23EE</button><button type='button' class='control-button icon-only-button' title='Play or pause' aria-label='Play or pause' data-media-play>\u23EF</button><button type='button' class='control-button icon-only-button' title='Next track' aria-label='Next track' data-media-next>\u23ED</button><button type='button' class='control-button icon-only-button' title='Mute audio' aria-label='Mute audio' data-media-mute>\uD83D\uDD07</button></div>";
-    const miniMediaTitle = miniMediaSection.querySelector("[data-mini-media-title]");
-    const miniMediaArtist = miniMediaSection.querySelector("[data-mini-media-artist]");
-    const renderMedia = () => {
-        miniMediaTitle.textContent = mediaState.title || "No media detected";
-        miniMediaArtist.textContent = mediaState.artist || (mediaState.playing ? "Playing" : "Idle");
-    };
-
-    const handleMediaUpdate = data => {
-        if (!data || data.error)
-            return;
-
-        mediaState = {
-            title: data.title || "No media detected",
-            artist: data.artist || "",
-            playing: Boolean(data.playing)
-        };
-        renderMedia();
-    };
-
-    miniMediaSection.querySelector("[data-media-prev]").onclick = () => mediaAction("previous");
-    miniMediaSection.querySelector("[data-media-play]").onclick = () => mediaAction("play");
-    miniMediaSection.querySelector("[data-media-next]").onclick = () => mediaAction("next");
-    miniMediaSection.querySelector("[data-media-mute]").onclick = () => mediaAction("mute");
-
-    on("media:update", handleMediaUpdate);
-    renderMedia();
-    loadMedia();
-    nodes.miniMedia = miniMediaSection;
-    nodes.miniMedia.dataset.widgetId = "miniMedia";
-
     const notesSection = document.createElement("section");
-    notesSection.className = "utility-card card glass";
+    notesSection.className = "utility-card card glass module module-utility";
     notesSection.innerHTML = "<p class='eyebrow'>NOTES</p><textarea class='utility-notes' maxlength='400' placeholder='Quick notes for your desk'></textarea>";
     const notesArea = notesSection.querySelector("textarea");
     notesArea.value = notes;
@@ -911,7 +838,76 @@ export default function Home() {
         showSheet(children);
     };
 
-    customize.querySelector("[data-customize]").onclick = openLayoutEditor;
+    const openHomeSettings = () => {
+        const children = [sheetTitle("HOME SETTINGS")];
+
+        const layoutTitle = sheetTitle("LAYOUT");
+        layoutTitle.style.marginTop = "14px";
+
+        const layoutRow = document.createElement("div");
+        layoutRow.className = "sheet-row";
+
+        const customizeButton = document.createElement("button");
+        customizeButton.type = "button";
+        customizeButton.className = "sheet-primary";
+        customizeButton.textContent = "Customize Widgets";
+        customizeButton.onclick = openLayoutEditor;
+        layoutRow.appendChild(customizeButton);
+
+        const lookTitle = sheetTitle("LOOK");
+        lookTitle.style.marginTop = "14px";
+
+        const accentLabel = document.createElement("p");
+        accentLabel.className = "home-look-label";
+        accentLabel.textContent = "Accent";
+
+        const themeChips = document.createElement("div");
+        themeChips.className = "home-look-chips";
+
+        const styleLabel = document.createElement("p");
+        styleLabel.className = "home-look-label";
+        styleLabel.style.marginTop = "10px";
+        styleLabel.textContent = "Style";
+
+        const styleChips = document.createElement("div");
+        styleChips.className = "home-look-chips";
+
+        renderLookChips(themeChips, styleChips);
+
+        const profileTitle = sheetTitle("PROFILE");
+        profileTitle.style.marginTop = "14px";
+
+        const profileRow = document.createElement("div");
+        profileRow.className = "sheet-row";
+
+        const exportButton = document.createElement("button");
+        exportButton.type = "button";
+        exportButton.className = "sheet-secondary";
+        exportButton.textContent = "Export JSON";
+        exportButton.onclick = () => exportProfile(exportButton);
+
+        const importButton = document.createElement("button");
+        importButton.type = "button";
+        importButton.className = "sheet-secondary";
+        importButton.textContent = "Import JSON";
+        importButton.onclick = () => importProfile(importButton);
+
+        profileRow.appendChild(exportButton);
+        profileRow.appendChild(importButton);
+
+        children.push(layoutTitle);
+        children.push(layoutRow);
+        children.push(lookTitle);
+        children.push(accentLabel);
+        children.push(themeChips);
+        children.push(styleLabel);
+        children.push(styleChips);
+        children.push(profileTitle);
+        children.push(profileRow);
+        showSheet(children);
+    };
+
+    settingsBar.querySelector("[data-home-settings]").onclick = openHomeSettings;
     applyLayout();
 
     const byName = names => {
@@ -962,7 +958,6 @@ export default function Home() {
             off("apps:running", renderQuickApps);
             off("apps:favorites", renderQuickApps);
             off("apps:recents", renderQuickApps);
-            off("media:update", handleMediaUpdate);
             return;
         }
 

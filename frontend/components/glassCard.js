@@ -6,7 +6,7 @@ document.createElement("div");
 
 
 card.className =
-"glass card";
+"glass card module";
 
 
 if(options.title)

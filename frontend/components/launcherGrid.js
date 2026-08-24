@@ -6,7 +6,7 @@ import LauncherCard from "./launcherCard.js";
 
 export default function LauncherGrid(keep) {
     const grid = document.createElement("div");
-    grid.className = "launcher-grid";
+    grid.className = "launcher-grid module module-launcher-grid";
 
     const cards = {};
 

@@ -35,45 +35,76 @@
 
 #gradient-layer {
     z-index: 1;
-    background: radial-gradient(circle at 8% 0%, rgba(61, 220, 255, .20), transparent 42%),
-        radial-gradient(circle at 100% 12%, rgba(126, 92, 255, .18), transparent 40%),
-        linear-gradient(170deg, #0b1225 0%, #070b18 52%, #04060d 100%);
+    background:
+        radial-gradient(circle at 10% -8%, rgba(61, 220, 255, .24), transparent 46%),
+        radial-gradient(circle at 96% 8%, rgba(194, 122, 255, .2), transparent 38%),
+        radial-gradient(circle at 50% 120%, rgba(74, 122, 255, .2), transparent 52%),
+        linear-gradient(168deg, #0e1427 0%, #090f1e 44%, #070c18 100%);
+}
+
+#gradient-layer::before {
+    content: "";
+    position: absolute;
+    top: 12%;
+    right: -22%;
+    width: 76%;
+    height: 40%;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0));
+    opacity: .42;
+    pointer-events: none;
+}
+
+#gradient-layer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px) 0 0 / 100% 44px;
+    opacity: .16;
+    pointer-events: none;
 }
 
 #topbar,
 #dock {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: var(--gutter);
+    right: var(--gutter);
     z-index: 20;
 }
 
 #topbar {
-    top: 0;
+    top: 6px;
     height: calc(var(--topbar-height) + var(--safe-top));
     padding-top: var(--safe-top);
 }
 
 #dock {
-    bottom: 0;
-    height: calc(var(--dock-height) + var(--safe-bottom));
-    padding-bottom: var(--safe-bottom);
+    bottom: calc(var(--safe-bottom) + 8px);
+    height: var(--dock-height);
+    padding-bottom: 0;
 }
 
 #app-view {
     position: absolute;
-    top: calc(var(--topbar-height) + var(--safe-top));
+    top: calc(var(--topbar-height) + var(--safe-top) + 16px);
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 10;
 
     /* The dock floats over the page, so the last card needs room to clear it. */
-    padding: 14px var(--gutter) calc(var(--dock-height) + var(--safe-bottom) + 20px);
+    padding: 14px var(--gutter) calc(var(--dock-height) + var(--safe-bottom) + 32px);
 
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+.page {
+    max-width: 980px;
+    margin: 0 auto;
 }
 
 /* Every page is a simple vertical stack; no flexbox gap, which Safari 12 lacks. */
@@ -82,12 +113,14 @@
 }
 
 .page > h2 {
-    font-size: 1.35rem;
-    letter-spacing: .01em;
+    font-size: 1.42rem;
+    font-weight: 620;
+    letter-spacing: .006em;
+    line-height: 1.12;
 }
 
 .page > h2 + * {
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 /*
@@ -139,8 +172,8 @@
 
 @media (min-width: 900px) {
     #app-view {
-        padding-left: 24px;
-        padding-right: 24px;
+        padding-left: 28px;
+        padding-right: 28px;
     }
 
     .launcher-grid {

@@ -14,7 +14,7 @@ const DOUBLE_TAP_MS = 300;
 
 export default function Trackpad() {
     const pad = document.createElement("div");
-    pad.className = "glass trackpad";
+    pad.className = "glass card module module-trackpad trackpad";
 
     pad.innerHTML = `
 <h3>Trackpad</h3>

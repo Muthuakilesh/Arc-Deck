@@ -9,7 +9,7 @@ const DEBOUNCE_MS = 220;
 
 export default function AppSearch() {
     const card = document.createElement("div");
-    card.className = "glass card app-search";
+    card.className = "glass card module module-search app-search";
 
     const field = document.createElement("input");
     field.type = "search";

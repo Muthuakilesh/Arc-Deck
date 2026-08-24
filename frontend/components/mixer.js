@@ -85,7 +85,7 @@ function row(session) {
 // Per-app volume: turn the game down without turning the call down.
 export default function Mixer() {
     const card = document.createElement("section");
-    card.className = "glass card mixer";
+    card.className = "glass card module module-mixer mixer";
 
     const eyebrow = document.createElement("p");
     eyebrow.className = "eyebrow";

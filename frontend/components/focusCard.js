@@ -16,7 +16,7 @@ const INLINE = 4;
 // the top of the home screen, so the common case costs no taps at all.
 export default function FocusCard() {
     const card = document.createElement("section");
-    card.className = "glass card focus-card";
+    card.className = "glass card module module-focus focus-card";
     card.style.display = "none";
 
     const eyebrow = document.createElement("p");

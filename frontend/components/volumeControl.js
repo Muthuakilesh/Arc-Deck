@@ -30,7 +30,7 @@ function byFocusedApp(sessions) {
 
 export default function VolumeControl() {
     const container = document.createElement("section");
-    container.className = "glass card volume";
+    container.className = "glass card module module-volume volume";
     container.innerHTML = `
         <div class="volume-heading">
             <div><p class="eyebrow">PC AUDIO</p><h3>Volume</h3></div>

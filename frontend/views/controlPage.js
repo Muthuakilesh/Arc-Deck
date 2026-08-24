@@ -5,7 +5,7 @@ import { post } from "../js/api.js";
 
 export default function ControlPage() {
     const page = document.createElement('div');
-    page.className = 'control page';
+    page.className = 'control page ios-modular-page';
 
     mountChrome();
 
@@ -13,19 +13,23 @@ export default function ControlPage() {
     const header = document.createElement('h2');
     header.textContent = 'Controls';
     page.appendChild(header);
-    page.appendChild(createControlHelpCard());
 
-    page.appendChild(Trackpad());
-    page.appendChild(createKeyboardInput());
-    page.appendChild(createPowerCard());
-    page.appendChild(VolumeControl());
+    const modules = document.createElement('div');
+    modules.className = 'module-grid module-grid-control';
+
+    modules.appendChild(createControlHelpCard());
+    modules.appendChild(Trackpad());
+    modules.appendChild(createKeyboardInput());
+    modules.appendChild(createPowerCard());
+    modules.appendChild(VolumeControl());
+    page.appendChild(modules);
 
     return page;
 }
 
 function createKeyboardInput() {
     const container = document.createElement('div');
-    container.className = 'glass card keyboard-card';
+    container.className = 'glass card module module-keyboard keyboard-card';
 
     container.innerHTML = `
 <h3>Remote Keyboard</h3>
@@ -89,7 +93,7 @@ function createKeyboardInput() {
 
 function createControlHelpCard() {
     const container = document.createElement('section');
-    container.className = 'glass card control-help';
+    container.className = 'glass card module module-help control-help';
 
     container.innerHTML = `
         <p class="eyebrow">QUICK HELP</p>
@@ -109,7 +113,7 @@ function createControlHelpCard() {
 
 function createPowerCard() {
     const container = document.createElement('section');
-    container.className = 'glass card power-card';
+    container.className = 'glass card module module-power power-card';
     container.innerHTML = `
         <p class="eyebrow">PC POWER</p>
         <h3>Power options</h3>

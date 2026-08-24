@@ -7,7 +7,7 @@ import { toast } from "../js/toast.js";
 // shows the handful worth one tap rather than the whole list.
 export default function SceneStrip() {
     const card = document.createElement("section");
-    card.className = "glass card scene-strip";
+    card.className = "glass card module module-scene-strip scene-strip";
     card.style.display = "none";
 
     const eyebrow = document.createElement("p");

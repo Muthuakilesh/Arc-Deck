@@ -7,7 +7,7 @@ export default function LauncherCard(app) {
     const card = document.createElement("button");
 
     card.type = "button";
-    card.className = "glass card launcher-card";
+    card.className = "glass card module module-launcher launcher-card";
     card.dataset.app = app.name || "";
 
     const icon = document.createElement("div");

@@ -18,7 +18,7 @@ const RATE_KEY = "arcdeck.screenRate";
 
 export default function ScreenPage() {
     const page = document.createElement("div");
-    page.className = "screenpeek page";
+    page.className = "screenpeek page ios-modular-page";
 
     mountChrome();
 
@@ -38,14 +38,14 @@ export default function ScreenPage() {
     header.textContent = "Screen";
 
     const picker = document.createElement("div");
-    picker.className = "pad-profiles";
+    picker.className = "pad-profiles module module-screen-controls";
 
     const telemetry = document.createElement("p");
     telemetry.className = "screen-status";
     telemetry.textContent = "Mode: auto";
 
     const card = document.createElement("div");
-    card.className = "glass card screen-card";
+    card.className = "glass card module module-screen screen-card";
 
     const shot = document.createElement("img");
     shot.className = "screen-shot";
@@ -68,10 +68,14 @@ export default function ScreenPage() {
     card.appendChild(marker);
     card.appendChild(status);
 
+    const modules = document.createElement("div");
+    modules.className = "module-grid module-grid-screen";
+
     page.appendChild(header);
-    page.appendChild(picker);
-    page.appendChild(telemetry);
-    page.appendChild(card);
+    modules.appendChild(picker);
+    modules.appendChild(telemetry);
+    modules.appendChild(card);
+    page.appendChild(modules);
 
     function saveMode() {
         try {

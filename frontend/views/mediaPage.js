@@ -6,7 +6,7 @@ import { loadMedia } from "../js/media.js";
 
 export default function MediaPage() {
     const page = document.createElement('div');
-    page.className = 'media page';
+    page.className = 'media page ios-modular-page';
 
     mountChrome();
 
@@ -15,10 +15,14 @@ export default function MediaPage() {
     header.textContent = 'Media';
     page.appendChild(header);
 
+    const modules = document.createElement('div');
+    modules.className = 'module-grid module-grid-media';
+
     const drawer = MediaDrawer();
-    page.appendChild(drawer);
-    page.appendChild(VolumeControl());
-    page.appendChild(Mixer());
+    modules.appendChild(drawer);
+    modules.appendChild(VolumeControl());
+    modules.appendChild(Mixer());
+    page.appendChild(modules);
 
     loadMedia();
 

@@ -9,7 +9,7 @@ import openSceneEditor from "./sceneEditor.js";
 
 function card(scene) {
     const element = document.createElement("div");
-    element.className = "scene-card glass card";
+    element.className = "scene-card glass card module module-scene-item";
 
     const run = document.createElement("button");
     run.type = "button";

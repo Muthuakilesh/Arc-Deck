@@ -7,7 +7,7 @@ document.createElement("div");
 
 
 hero.className =
-"glass card hero";
+"glass card module module-hero hero";
 
 
 

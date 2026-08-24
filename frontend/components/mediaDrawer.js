@@ -16,7 +16,7 @@ document.createElement(
 
 
 drawer.className =
-"glass card media-drawer";
+"glass card module module-media media-drawer";
 
 
 

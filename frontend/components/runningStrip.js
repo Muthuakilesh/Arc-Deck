@@ -8,7 +8,7 @@ import openAppSheet from "./appSheet.js";
 // card hides itself while nothing is running so the home screen stays short.
 export default function RunningStrip() {
     const card = document.createElement("div");
-    card.className = "glass card running-strip";
+    card.className = "glass card module module-running running-strip";
     card.style.display = "none";
 
     const title = document.createElement("p");
