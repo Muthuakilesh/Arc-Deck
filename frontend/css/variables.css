@@ -49,3 +49,19 @@
         --dock-height: 72px;
     }
 }
+
+@media (max-width: 359px) {
+    :root {
+        --gutter: 10px;
+        --stack: 10px;
+        --topbar-height: 48px;
+        --dock-height: 60px;
+    }
+}
+
+@media (min-width: 900px) {
+    :root {
+        --gutter: 30px;
+        --stack: 20px;
+    }
+}

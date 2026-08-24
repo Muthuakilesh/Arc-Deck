@@ -155,6 +155,7 @@ def delete_scene(scene_id):
 
 
 def run_scene(scene_id):
+    started = time.time()
     scenes = get_scenes()
     found = [scene for scene in scenes if scene.get("id") == scene_id]
 
@@ -176,7 +177,14 @@ def run_scene(scene_id):
             return {
                 "error": body.get("error", "Step failed"),
                 "scene": scene.get("name"),
-                "step": position + 1
+                "step": position + 1,
+                "step_label": step.get("label") or step.get("command") or "Action",
+                "step_app": step.get("app") or "",
+                "elapsed_ms": int((time.time() - started) * 1000)
             }, status if status >= 400 else 500
 
-    return {"ran": scene.get("name"), "steps": len(scene.get("steps") or [])}
+    return {
+        "ran": scene.get("name"),
+        "steps": len(scene.get("steps") or []),
+        "elapsed_ms": int((time.time() - started) * 1000)
+    }

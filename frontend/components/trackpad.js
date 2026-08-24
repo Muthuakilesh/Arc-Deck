@@ -21,6 +21,7 @@ export default function Trackpad() {
 <div class="surface" aria-label="Trackpad. Drag to move, tap to click, two fingers to scroll.">
     <span class="surface-hint">Tap to click &middot; two fingers to scroll &middot; double-tap and hold to drag</span>
 </div>
+<p class="pad-status" aria-live="polite">Ready</p>
 <div class="buttons">
     <button type="button" id="left">Left</button>
     <button type="button" id="right">Right</button>
@@ -34,6 +35,7 @@ export default function Trackpad() {
     const surface = pad.querySelector(".surface");
     const slider = pad.querySelector("#pad-sensitivity");
     const readout = pad.querySelector(".pad-speed-value");
+    const status = pad.querySelector(".pad-status");
 
     slider.value = String(getSensitivity());
     readout.textContent = Number(slider.value).toFixed(1) + "x";
@@ -101,7 +103,13 @@ export default function Trackpad() {
             dragging = true;
             surface.classList.add("dragging");
             press("left", true);
+            status.textContent = "Dragging";
+            return;
         }
+
+        status.textContent = event.touches.length > 1
+            ? "Scrolling"
+            : "Pointer move";
     });
 
     surface.addEventListener("touchmove", event => {
@@ -135,12 +143,18 @@ export default function Trackpad() {
             dragging = false;
             surface.classList.remove("dragging");
             press("left", false);
+            status.textContent = "Drag ended";
         } else if (quick && fingers > 1)
-            click("right");
+            status.textContent = "Right click";
         else if (quick) {
+            status.textContent = "Left click";
             click("left");
             lastTapAt = Date.now();
-        }
+        } else
+            status.textContent = "Pointer move";
+
+        if (quick && fingers > 1)
+            click("right");
 
         fingers = 0;
     });
@@ -155,10 +169,17 @@ export default function Trackpad() {
         }
 
         fingers = 0;
+        status.textContent = "Gesture canceled";
     });
 
-    pad.querySelector("#left").onclick = () => click("left");
-    pad.querySelector("#right").onclick = () => click("right");
+    pad.querySelector("#left").onclick = () => {
+        status.textContent = "Left click";
+        click("left");
+    };
+    pad.querySelector("#right").onclick = () => {
+        status.textContent = "Right click";
+        click("right");
+    };
 
     return pad;
 }

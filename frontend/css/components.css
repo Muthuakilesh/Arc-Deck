@@ -65,6 +65,17 @@
     transform: scale(.97);
 }
 
+.control-button:disabled,
+.keyboard-actions button:disabled,
+.power-actions button:disabled,
+.quick-keys button:disabled,
+.focus-controls button:disabled,
+.buttons button:disabled,
+.sheet-item:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
 .primary-control {
     background: var(--accent);
     border-color: transparent;
@@ -142,6 +153,7 @@
 .dock-item {
     flex: 1 1 0;
     min-width: 0;
+    position: relative;
 
     display: flex;
     flex-direction: column;
@@ -166,12 +178,47 @@
     white-space: nowrap;
 }
 
+@media (max-width: 359px) {
+    .dock {
+        padding: 0 2px;
+    }
+
+    .dock-icon {
+        font-size: 1.05rem;
+        line-height: 1.15;
+    }
+
+    .dock-item {
+        font-size: .52rem;
+        letter-spacing: .02em;
+    }
+}
+
 .dock-item.active {
     color: var(--accent);
 }
 
 .dock-item:active {
     color: var(--text);
+}
+
+.dock-item.show-tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    max-width: 120px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--surface-line);
+    background: rgba(7, 11, 24, .95);
+    color: var(--text);
+    font-size: .68rem;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .35);
+    pointer-events: none;
 }
 
 /* The overflow pages (games, stats, clock, themes) live in a bottom sheet. */
@@ -218,6 +265,18 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-gap: 8px;
     gap: 8px;
+}
+
+@media (max-width: 359px) {
+    .sheet-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 720px) {
+    .sheet-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
 }
 
 .sheet-item {
@@ -284,6 +343,30 @@
 .widgets div {
     font-size: .78rem;
     font-weight: 500;
+    color: var(--text-dim);
+}
+
+/* ---------- quick apps ---------- */
+
+.quick-apps {
+    margin-top: 10px;
+}
+
+.quick-apps-grid {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 8px;
+}
+
+.quick-app-card {
+    padding: 10px 6px;
+}
+
+.quick-apps-empty {
+    grid-column: 1 / -1;
+    margin: 2px 0;
+    font-size: .75rem;
     color: var(--text-dim);
 }
 
@@ -456,6 +539,16 @@
     background: var(--surface-raised);
     border: 1px dashed var(--surface-line);
     border-radius: var(--radius-sm);
+}
+
+.scene-diagnostics {
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--surface-line);
+    background: rgba(255, 255, 255, .04);
+    font-size: .74rem;
+    color: var(--text-dim);
 }
 
 /* ---------- scene editor ---------- */
@@ -871,6 +964,12 @@
     line-height: 1.5;
 }
 
+.pad-status {
+    margin-top: 8px;
+    font-size: .72rem;
+    color: var(--text-dim);
+}
+
 .pad-speed {
     display: flex;
     align-items: center;
@@ -917,6 +1016,34 @@
 
 .keyboard-card h3 {
     font-size: 1.05rem;
+}
+
+.keyboard-hint {
+    margin-top: 8px;
+    font-size: .72rem;
+    color: var(--text-faint);
+}
+
+.control-help details {
+    margin-top: 8px;
+}
+
+.control-help summary {
+    cursor: pointer;
+    font-size: .82rem;
+    color: var(--accent);
+}
+
+.control-help ul {
+    margin-top: 8px;
+    margin-left: 18px;
+    font-size: .76rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+
+.control-help li + li {
+    margin-top: 4px;
 }
 
 .keyboard-card textarea {
@@ -998,6 +1125,44 @@
     margin-top: 10px;
     font-size: .76rem;
     color: var(--text-dim);
+}
+
+.focus-presets {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.focus-presets .focus-preset {
+    margin: 0 6px 6px 0;
+}
+
+.focus-preset {
+    min-height: 34px;
+    min-width: 48px;
+    padding: 0 10px;
+    border: 1px solid var(--surface-line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    color: var(--text-dim);
+    font-size: .75rem;
+}
+
+.focus-preset.active {
+    color: var(--accent);
+    border-color: rgba(61, 220, 255, .45);
+}
+
+@media (min-width: 900px) {
+    .clock-page {
+        max-width: 840px;
+        margin: 0 auto;
+    }
+
+    .clock-time {
+        font-size: 6.2rem;
+        font-size: clamp(3.2rem, 9vw, 6.2rem);
+    }
 }
 
 /* Focus mode dims the chrome so only the timer is left. */
@@ -1149,6 +1314,7 @@
 /* ---------- screen peek ---------- */
 
 .screen-card {
+    position: relative;
     padding: 10px;
 }
 
@@ -1163,6 +1329,26 @@
     margin-top: 8px;
     font-size: .74rem;
     color: var(--text-faint);
+}
+
+.screen-tap-marker {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    margin-left: -11px;
+    margin-top: -11px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: rgba(61, 220, 255, .18);
+    box-shadow: 0 0 0 0 rgba(61, 220, 255, .42);
+    opacity: 0;
+    transform: scale(.75);
+    pointer-events: none;
+}
+
+.screen-tap-marker.show {
+    opacity: 1;
+    animation: tapPulse 360ms ease;
 }
 
 /* ---------- app search ---------- */

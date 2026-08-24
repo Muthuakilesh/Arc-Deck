@@ -1,4 +1,5 @@
 from flask import Blueprint
+from ._errors import envelope
 
 from services.media import (
     get_media,
@@ -18,8 +19,7 @@ media_bp = Blueprint(
 methods=["GET"]
 )
 def current_media():
-
-    return get_media()
+    return envelope(get_media(), default_code="ERR_MEDIA_STATUS")
 
 
 
@@ -32,4 +32,4 @@ def action():
     from flask import request
 
     data = request.json or {}
-    return media_action(data.get("action"))
+    return envelope(media_action(data.get("action")), default_code="ERR_MEDIA_ACTION")

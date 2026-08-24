@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from ._errors import envelope
 
 from services.appsearch import launch_shortcut, search_shortcuts
 from services.launcher import app_action, get_apps, open_app
@@ -21,7 +22,7 @@ def running():
 @apps_bp.route("/open", methods=["POST"])
 def launch():
     data = request.json or {}
-    return open_app(data.get("name"))
+    return envelope(open_app(data.get("name")), default_code="ERR_APPS_OPEN")
 
 
 @apps_bp.route("/search", methods=["GET"])
@@ -33,10 +34,10 @@ def search():
 @apps_bp.route("/search/open", methods=["POST"])
 def open_found():
     data = request.json or {}
-    return launch_shortcut(data.get("id"))
+    return envelope(launch_shortcut(data.get("id")), default_code="ERR_APPS_SEARCH_OPEN")
 
 
 @apps_bp.route("/action", methods=["POST"])
 def action():
     data = request.json or {}
-    return app_action(data.get("name"), data.get("action"))
+    return envelope(app_action(data.get("name"), data.get("action")), default_code="ERR_APPS_ACTION")

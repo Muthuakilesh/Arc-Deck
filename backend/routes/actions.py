@@ -1,6 +1,7 @@
 """Compatibility command bridge for the original single-file ArcDeck UI."""
 
 from flask import Blueprint, request
+from ._errors import error_response
 
 from services.volume import AudioError, get_volume, set_volume, toggle_mute
 from services.launcher import open_app, app_action
@@ -8,6 +9,7 @@ from services.media import media_action
 from services.mouse import move_mouse, click_mouse
 from services.keyboard import press_hotkey
 from services.power import run_power_action
+from ._errors import envelope
 
 
 actions_bp = Blueprint("actions", __name__)
@@ -60,8 +62,8 @@ def action():
         if command == "power":
             result = run_power_action(data.get("action"))
             if isinstance(result, tuple):
-                result, code = result
-                return {"success": False, **result}, code
+                body, code = envelope(result, default_code="ERR_POWER_ACTION")
+                return {"success": False, **body}, code
             return {"success": "error" not in result, **result}
 
         if command == "trackpad":
@@ -76,10 +78,18 @@ def action():
                 result = press_hotkey(key)
             return {"success": "error" not in result, **result}
     except (TypeError, ValueError) as error:
-        return {"success": False, "error": str(error) or "invalid request"}, 400
+        body, code = error_response(str(error) or "invalid request", status=400, code="ERR_ACTION_VALIDATION")
+        return dict(body, success=False), code
     except AudioError as error:
-        return {"success": False, "error": "Audio device unavailable: {0}".format(error)}, 503
+        body, code = error_response(
+            "Audio device unavailable: {0}".format(error),
+            status=503,
+            code="ERR_AUDIO_UNAVAILABLE"
+        )
+        return dict(body, success=False), code
     except Exception as error:
-        return {"success": False, "error": str(error)}, 500
+        body, code = error_response(str(error), status=500, code="ERR_ACTION_RUNTIME")
+        return dict(body, success=False), code
 
-    return {"success": False, "error": "unsupported command"}, 400
+    body, code = error_response("unsupported command", status=400, code="ERR_ACTION_UNSUPPORTED")
+    return dict(body, success=False), code

@@ -11,11 +11,14 @@ import os
 import random
 import secrets
 import threading
+import time
+import tempfile
 
 
 DATA_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "auth.json")
 
 MAX_TOKENS = 10
+DEFAULT_TOKEN_TTL_DAYS = 30
 
 _lock = threading.Lock()
 _config = None
@@ -23,6 +26,58 @@ _config = None
 
 def _default_config():
     return {"pin": "{0:04d}".format(random.SystemRandom().randrange(10000)), "tokens": []}
+
+
+def _ttl_seconds():
+    try:
+        days = int(os.environ.get("ARCDECK_TOKEN_TTL_DAYS", DEFAULT_TOKEN_TTL_DAYS))
+    except (TypeError, ValueError):
+        days = DEFAULT_TOKEN_TTL_DAYS
+
+    return max(1, days) * 24 * 60 * 60
+
+
+def _new_token_record(token, now=None):
+    stamp = int(now if now is not None else time.time())
+
+    return {
+        "token": str(token),
+        "issued_at": stamp,
+        "expires_at": stamp + _ttl_seconds()
+    }
+
+
+def _normalize_tokens(tokens, now=None):
+    stamp = int(now if now is not None else time.time())
+    cleaned = []
+
+    if not isinstance(tokens, list):
+        return cleaned
+
+    for entry in tokens:
+        if isinstance(entry, str):
+            record = _new_token_record(entry, now=stamp)
+        elif isinstance(entry, dict) and entry.get("token"):
+            try:
+                expires = int(entry.get("expires_at", 0))
+                issued = int(entry.get("issued_at", max(0, expires - _ttl_seconds())))
+            except (TypeError, ValueError):
+                continue
+
+            record = {
+                "token": str(entry.get("token")),
+                "issued_at": issued,
+                "expires_at": expires
+            }
+        else:
+            continue
+
+        if not record["token"] or record["expires_at"] <= stamp:
+            continue
+
+        cleaned.append(record)
+
+    return cleaned[-MAX_TOKENS:]
 
 
 def _read_file():
@@ -35,18 +90,28 @@ def _read_file():
     if not isinstance(data, dict) or not data.get("pin"):
         return None
 
-    tokens = data.get("tokens")
+    tokens = _normalize_tokens(data.get("tokens"), now=time.time())
     return {
         "pin": str(data["pin"]),
-        "tokens": [str(token) for token in tokens] if isinstance(tokens, list) else []
+        "tokens": tokens
     }
 
 
 def _write_file(config):
     path = os.path.abspath(DATA_FILE)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(config, handle, indent=2)
+
+    handle, temporary = tempfile.mkstemp(dir=os.path.dirname(path), suffix=".tmp")
+
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as file:
+            json.dump(config, file, indent=2)
+
+        os.replace(temporary, path)
+    except OSError:
+        if os.path.exists(temporary):
+            os.remove(temporary)
+        raise
 
 
 def _load():
@@ -86,7 +151,8 @@ def login(pin):
             return None
 
         token = secrets.token_urlsafe(32)
-        config["tokens"] = (config["tokens"] + [token])[-MAX_TOKENS:]
+        config["tokens"] = _normalize_tokens(config.get("tokens"), now=time.time())
+        config["tokens"] = (config["tokens"] + [_new_token_record(token)])[-MAX_TOKENS:]
         _write_file(config)
         return token
 
@@ -96,9 +162,16 @@ def is_valid_token(token):
         return False
 
     with _lock:
-        tokens = _load()["tokens"]
+        config = _load()
+        before = list(config.get("tokens") or [])
+        config["tokens"] = _normalize_tokens(before, now=time.time())
 
-    return any(hmac.compare_digest(token, known) for known in tokens)
+        if before != config["tokens"]:
+            _write_file(config)
+
+        tokens = config["tokens"]
+
+    return any(hmac.compare_digest(token, known.get("token", "")) for known in tokens)
 
 
 def revoke_all():

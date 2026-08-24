@@ -21,6 +21,65 @@ const OVERFLOW = [
     { icon: "\u25F7", page: "clock", label: "Clock" }
 ];
 
+const HOLD_MS = 450;
+
+function hint(button) {
+    let timer = 0;
+    let startX = 0;
+    let startY = 0;
+
+    const stop = () => {
+        if (timer) {
+            window.clearTimeout(timer);
+            timer = 0;
+        }
+    };
+
+    const show = () => {
+        button.classList.add("show-tip");
+        button.dataset.skipClick = "1";
+
+        window.setTimeout(() => {
+            button.classList.remove("show-tip");
+        }, 900);
+    };
+
+    button.addEventListener("touchstart", event => {
+        if (!event.touches || event.touches.length !== 1)
+            return;
+
+        const touch = event.touches[0];
+
+        startX = touch.clientX;
+        startY = touch.clientY;
+        stop();
+        timer = window.setTimeout(show, HOLD_MS);
+    }, { passive: true });
+
+    button.addEventListener("touchmove", event => {
+        if (!timer || !event.touches || !event.touches.length)
+            return;
+
+        const touch = event.touches[0];
+
+        if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10)
+            stop();
+    }, { passive: true });
+
+    ["touchend", "touchcancel", "mousedown", "mouseup", "mouseleave"].forEach(name => {
+        button.addEventListener(name, stop, { passive: true });
+    });
+
+    button.addEventListener("click", event => {
+        if (button.dataset.skipClick !== "1")
+            return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        button.dataset.skipClick = "0";
+    }, true);
+}
+
 
 function item(entry, className) {
     const button = document.createElement("button");
@@ -28,6 +87,7 @@ function item(entry, className) {
     button.type = "button";
     button.className = className;
     button.dataset.page = entry.page;
+    button.dataset.tip = entry.label;
     button.title = entry.label;
 
     const icon = document.createElement("span");
@@ -41,6 +101,8 @@ function item(entry, className) {
 
     button.appendChild(icon);
     button.appendChild(label);
+
+    hint(button);
 
     return button;
 }

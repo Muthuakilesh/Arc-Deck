@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from ._errors import envelope
 
 from services.keyboard import type_text, press_hotkey
 
@@ -15,7 +16,7 @@ keyboard_bp = Blueprint(
 def type_route():
     data = request.json or {}
     text = data.get("text", "")
-    return type_text(text)
+    return envelope(type_text(text), default_code="ERR_KEYBOARD_TYPE")
 
 
 @keyboard_bp.route(
@@ -27,4 +28,4 @@ def hotkey_route():
     keys = data.get("keys")
     if isinstance(keys, str):
         keys = [k.strip() for k in keys.split("+") if k.strip()]
-    return press_hotkey(*(keys or []))
+    return envelope(press_hotkey(*(keys or [])), default_code="ERR_KEYBOARD_HOTKEY")

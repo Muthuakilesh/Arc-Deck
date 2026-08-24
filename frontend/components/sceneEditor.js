@@ -87,6 +87,39 @@ function backRow(draft) {
     return row;
 }
 
+function openPreview(draft) {
+    const children = [sheetTitle("DRY RUN PREVIEW")];
+    const summary = document.createElement("p");
+    summary.className = "mix-empty";
+
+    const totalDelay = draft.steps.reduce((sum, step) => {
+        return sum + (step.delay && !step.app ? Number(step.delay) : 0);
+    }, 0);
+
+    summary.textContent = "Steps: " + draft.steps.length + " \u00b7 delay: " + totalDelay + "ms";
+
+    const list = document.createElement("div");
+    list.className = "step-list";
+
+    draft.steps.forEach((step, index) => {
+        const row = document.createElement("div");
+        row.className = "step-row";
+
+        const text = document.createElement("span");
+        text.className = "step-text";
+        text.textContent = index + 1 + ". " + stepText(step);
+
+        row.appendChild(text);
+        list.appendChild(row);
+    });
+
+    children.push(summary);
+    children.push(list);
+    children.push(backRow(draft));
+
+    showSheet(children);
+}
+
 
 function openStepPicker(draft) {
     const children = [sheetTitle("ADD A STEP")];
@@ -191,6 +224,9 @@ export default function openSceneEditor(scene) {
     const add = button("Add step", "sheet-action");
     add.onclick = () => openStepPicker(draft);
 
+    const preview = button("Preview", "sheet-action");
+    preview.onclick = () => openPreview(draft);
+
     const pin = button(draft.pinned ? "Pinned to home" : "Pin to home", "sheet-action");
 
     if (draft.pinned)
@@ -242,6 +278,7 @@ export default function openSceneEditor(scene) {
     children.push(stepsTitle);
     children.push(steps);
     children.push(add);
+    children.push(preview);
     children.push(pin);
     children.push(row);
 
