@@ -36,5 +36,9 @@ export async function deleteScene(id) {
 
 
 export function runScene(id) {
-    return post("/scenes/" + encodeURIComponent(id) + "/run", {});
+    return post("/scenes/" + encodeURIComponent(id) + "/run", {}).then(result => {
+        state.sceneRun = result || null;
+        emit("scenes:run", state.sceneRun);
+        return result;
+    });
 }

@@ -13,6 +13,7 @@ export default function ControlPage() {
     const header = document.createElement('h2');
     header.textContent = 'Controls';
     page.appendChild(header);
+    page.appendChild(createControlHelpCard());
 
     page.appendChild(Trackpad());
     page.appendChild(createKeyboardInput());
@@ -33,6 +34,7 @@ function createKeyboardInput() {
     <button id="send-keyboard">Send</button>
     <button id="clear-keyboard">Clear</button>
 </div>
+<p class="keyboard-hint">Tip: Press Ctrl+Enter to send quickly.</p>
 <div class="quick-keys" aria-label="Remote shortcut keys">
     <button type="button" data-key="tab">Tab</button>
     <button type="button" data-key="enter">Enter</button>
@@ -46,6 +48,14 @@ function createKeyboardInput() {
     const button = container.querySelector('#send-keyboard');
     const clearBtn = container.querySelector('#clear-keyboard');
     const status = container.querySelector('#keyboard-status');
+
+    textarea.addEventListener('keydown', event => {
+        if (!(event.ctrlKey && event.key === 'Enter'))
+            return;
+
+        event.preventDefault();
+        button.click();
+    });
 
     button.onclick = async () => {
         if (!textarea) return;
@@ -73,6 +83,26 @@ function createKeyboardInput() {
             setTimeout(() => { status.textContent = ''; }, 1600);
         };
     });
+
+    return container;
+}
+
+function createControlHelpCard() {
+    const container = document.createElement('section');
+    container.className = 'glass card control-help';
+
+    container.innerHTML = `
+        <p class="eyebrow">QUICK HELP</p>
+        <details>
+            <summary>How to use controls efficiently</summary>
+            <ul>
+                <li>Trackpad: tap for left click, two-finger tap for right click.</li>
+                <li>Trackpad: two fingers drag to scroll.</li>
+                <li>Trackpad: double-tap and hold to drag windows.</li>
+                <li>Keyboard: use Ctrl+Enter to send text quickly.</li>
+                <li>Audio: use "Mute focused app" to silence only the active app.</li>
+            </ul>
+        </details>`;
 
     return container;
 }

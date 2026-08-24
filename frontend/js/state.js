@@ -57,6 +57,12 @@ sessions:[],
 
 scenes:[]
 
+,sceneRun:null
+
+,favorites:[]
+
+,recents:[]
+
 
 
 };
