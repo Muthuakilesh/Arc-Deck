@@ -11,6 +11,22 @@ python app.py            # prints the pairing PIN, serves the UI on :5000
 
 Set `ARCDECK_PIN` to choose the PIN yourself.
 
+## Security controls
+
+Arc-Deck now includes baseline API hardening for LAN deployments:
+
+- Login brute-force protection: after repeated bad PIN attempts from one client,
+  login is locked for a short period.
+- Token expiry: pairing tokens expire automatically (default 30 days).
+- API request throttling: protects against request floods on high-cost endpoints.
+- Origin checks: `/api/*` and Socket.IO connections reject disallowed origins.
+
+Optional environment variables:
+
+- `ARCDECK_TOKEN_TTL_DAYS` — token lifetime in days (default `30`).
+- `ARCDECK_ALLOWED_ORIGINS` — comma-separated extra allowed origins,
+  for example `https://deck.example.com,http://192.168.1.44:5000`.
+
 ## App actions
 
 Everything the deck can do to an app is declared in `backend/data/apps.json`.
