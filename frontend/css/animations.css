@@ -104,6 +104,44 @@
     }
 }
 
+@keyframes neonPulse {
+    0%,
+    100% {
+        opacity: .92;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes gridDrift {
+    from {
+        transform: perspective(420px) rotateX(68deg) translateY(16px) translateX(0);
+    }
+
+    to {
+        transform: perspective(420px) rotateX(68deg) translateY(16px) translateX(-24px);
+    }
+}
+
+@keyframes digitFlip {
+    0% {
+        transform: rotateX(0deg);
+        opacity: .88;
+    }
+
+    50% {
+        transform: rotateX(-90deg);
+        opacity: .4;
+    }
+
+    100% {
+        transform: rotateX(0deg);
+        opacity: 1;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: .01ms !important;

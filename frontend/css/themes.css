@@ -23,3 +23,74 @@ html[data-theme="mint"] {
     --accent: #6ff2b6;
     --accent-ink: #04231a;
 }
+
+/* ---------- UI style presets ---------- */
+
+html[data-ui-style="neon-cyber"] .card {
+    border-color: rgba(61, 220, 255, .22);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .45), 0 0 0 1px rgba(61, 220, 255, .12) inset;
+}
+
+html[data-ui-style="neon-cyber"] .hero {
+    background: linear-gradient(135deg, rgba(61, 220, 255, .26), rgba(126, 92, 255, .2));
+}
+
+html[data-ui-style="neon-cyber"] .topbar,
+html[data-ui-style="neon-cyber"] .dock {
+    background: rgba(5, 8, 18, .92);
+}
+
+html[data-ui-style="soft-comfort"] {
+    --background: #10131c;
+    --surface: rgba(39, 44, 56, .88);
+    --surface-raised: rgba(62, 69, 86, .9);
+    --surface-line: rgba(255, 255, 255, .14);
+    --surface-press: rgba(255, 255, 255, .2);
+    --text: #f2f5ff;
+    --text-dim: rgba(242, 245, 255, .7);
+    --text-faint: rgba(242, 245, 255, .46);
+    --radius-sm: 14px;
+    --radius-md: 20px;
+    --radius-lg: 28px;
+}
+
+html[data-ui-style="soft-comfort"] .card {
+    border-color: rgba(255, 255, 255, .17);
+    box-shadow: 0 10px 28px rgba(7, 10, 20, .4);
+}
+
+html[data-ui-style="soft-comfort"] .hero {
+    background: linear-gradient(140deg, rgba(142, 203, 255, .24), rgba(192, 167, 255, .16));
+}
+
+html[data-ui-style="soft-comfort"] .dock-item,
+html[data-ui-style="soft-comfort"] .sheet-item,
+html[data-ui-style="soft-comfort"] .control-button {
+    border-radius: 14px;
+}
+
+html[data-ui-style="minimal-pro"] {
+    --background: #06090f;
+    --surface: rgba(18, 22, 30, .9);
+    --surface-raised: rgba(30, 35, 46, .94);
+    --surface-line: rgba(255, 255, 255, .07);
+    --surface-press: rgba(255, 255, 255, .13);
+    --shadow: 0 5px 16px rgba(0, 0, 0, .35);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+}
+
+html[data-ui-style="minimal-pro"] .card {
+    box-shadow: var(--shadow);
+}
+
+html[data-ui-style="minimal-pro"] .eyebrow {
+    letter-spacing: .08em;
+}
+
+html[data-ui-style="minimal-pro"] .dock-label,
+html[data-ui-style="minimal-pro"] .launcher-status,
+html[data-ui-style="minimal-pro"] .scene-steps {
+    font-size: .64rem;
+}

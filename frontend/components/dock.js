@@ -1,5 +1,5 @@
 import router from "../js/router.js";
-import { THEMES, applyTheme, currentTheme } from "../js/theme.js";
+import { THEMES, UI_STYLES, applyTheme, applyUiStyle, currentTheme, currentUiStyle } from "../js/theme.js";
 import { closeSheet, sheetIsOpen, sheetTitle, showSheet } from "./sheet.js";
 
 // Seven equal buttons on a 320px screen is 45px each with no room for labels,
@@ -160,7 +160,38 @@ function openSheet() {
         themeGrid.appendChild(button);
     });
 
-    showSheet([title, grid, themeTitle, themeGrid]);
+    const styleTitle = sheetTitle("STYLE");
+    styleTitle.style.marginTop = "14px";
+
+    const styleGrid = document.createElement("div");
+    styleGrid.className = "sheet-grid";
+
+    UI_STYLES.forEach(style => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "sheet-item";
+        button.textContent = style.label;
+
+        if (currentUiStyle() === style.id)
+            button.classList.add("active");
+
+        const dot = document.createElement("span");
+        dot.className = "dock-icon";
+        dot.textContent = "\u25F0";
+
+        button.insertBefore(dot, button.firstChild);
+
+        button.onclick = () => {
+            applyUiStyle(style.id);
+            closeSheet();
+            openSheet();
+        };
+
+        styleGrid.appendChild(button);
+    });
+
+    showSheet([title, grid, themeTitle, themeGrid, styleTitle, styleGrid]);
 }
 
 

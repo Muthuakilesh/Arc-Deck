@@ -9,6 +9,9 @@ page:
 theme:
 "default",
 
+uiStyle:
+"neon-cyber",
+
 
 
 wallpaper:

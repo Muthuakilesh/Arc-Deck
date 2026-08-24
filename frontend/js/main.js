@@ -11,7 +11,7 @@ import ControlPage from "../views/controlPage.js";
 import StatsPage from "../views/statsPage.js";
 import ClockPage from "../views/clockPage.js";
 
-import { initTheme } from "./theme.js";
+import { initTheme, initUiStyle } from "./theme.js";
 import { startClock } from "./clock.js";
 import { connectSocket } from "./websocket.js";
 import { ensureAuthenticated } from "./auth.js";
@@ -48,6 +48,7 @@ function registerWorker() {
 
 async function start() {
     initTheme();
+    initUiStyle();
 
     // The PIN card renders into this screen, so the splash goes first.
     dismissSplash();
