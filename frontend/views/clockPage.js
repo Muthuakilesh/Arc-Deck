@@ -1,4 +1,6 @@
 import mountChrome from "../js/chrome.js";
+import { iconMarkup } from "../components/icon.js";
+import { getFocusSession, pauseFocus, remainingSeconds, resetFocus, resumeFocus, startFocus } from "../js/focus.js";
 
 const PRESETS = [
     { label: "5m", seconds: 5 * 60 },
@@ -134,11 +136,15 @@ export default function ClockPage() {
     mountChrome();
     page.innerHTML = `
         <section class="clock-hero glass card" data-clock-hero><p class="eyebrow">ARC FOCUS</p><time class="clock-time">--:--</time><p class="clock-date">Loading date…</p><p class="clock-standby-tip">Tap anywhere to exit standby</p></section>
-        <section class="focus-card glass card"><div><p class="eyebrow">FOCUS TIMER</p><h2 data-timer>25:00</h2></div><div class="focus-presets" data-presets></div><div class="focus-presets" data-clock-styles></div><div class="focus-presets" data-clock-options></div><div class="focus-presets" data-clock-motions></div><label class="clock-dim-row" data-clock-dim-row><span>Standby Dim</span><input type="range" min="25" max="100" step="1" data-clock-dim><output data-clock-dim-value>70%</output></label><div class="focus-controls"><button type="button" class="icon-only-button" data-start></button><button type="button" class="icon-only-button" data-reset></button><button type="button" class="icon-only-button" data-focus></button></div><div class="focus-controls"><button type="button" class="icon-only-button" data-landscape></button><button type="button" class="icon-only-button" data-neon></button><button type="button" class="icon-only-button" data-standby></button></div><p data-status>Ready for a focused session.</p></section>`;
+        <section class="focus-card glass card"><div><p class="eyebrow">FOCUS TIMER</p><h2 data-timer>25:00</h2></div><div class="focus-presets" data-presets></div><div class="focus-completion" data-completion hidden><button type="button" data-again>Start again</button><button type="button" data-break>Take a 5m break</button></div><div class="focus-presets" data-clock-styles></div><div class="focus-presets" data-clock-options></div><div class="focus-presets" data-clock-motions></div><label class="clock-dim-row" data-clock-dim-row><span>Standby Dim</span><input type="range" min="25" max="100" step="1" data-clock-dim><output data-clock-dim-value>70%</output></label><div class="focus-controls"><button type="button" class="icon-only-button" data-start></button><button type="button" class="icon-only-button" data-reset></button><button type="button" class="icon-only-button" data-focus></button></div><div class="focus-controls"><button type="button" class="icon-only-button" data-landscape></button><button type="button" class="icon-only-button" data-neon></button><button type="button" class="icon-only-button" data-standby></button></div><p data-status>Ready for a focused session.</p></section>`;
 
-    const time = page.querySelector(".clock-time"), date = page.querySelector(".clock-date"), timer = page.querySelector("[data-timer]"), start = page.querySelector("[data-start]"), status = page.querySelector("[data-status]"), presetRow = page.querySelector("[data-presets]"), clockStyleRow = page.querySelector("[data-clock-styles]"), clockOptionsRow = page.querySelector("[data-clock-options]"), clockMotionRow = page.querySelector("[data-clock-motions]"), clockDimRow = page.querySelector("[data-clock-dim-row]"), clockDimInput = page.querySelector("[data-clock-dim]"), clockDimValue = page.querySelector("[data-clock-dim-value]"), landscapeButton = page.querySelector("[data-landscape]"), neonButton = page.querySelector("[data-neon]"), standbyButton = page.querySelector("[data-standby]"), clockHero = page.querySelector("[data-clock-hero]");
+    const time = page.querySelector(".clock-time"), date = page.querySelector(".clock-date"), timer = page.querySelector("[data-timer]"), start = page.querySelector("[data-start]"), status = page.querySelector("[data-status]"), presetRow = page.querySelector("[data-presets]"), completion = page.querySelector("[data-completion]"), clockStyleRow = page.querySelector("[data-clock-styles]"), clockOptionsRow = page.querySelector("[data-clock-options]"), clockMotionRow = page.querySelector("[data-clock-motions]"), clockDimRow = page.querySelector("[data-clock-dim-row]"), clockDimInput = page.querySelector("[data-clock-dim]"), clockDimValue = page.querySelector("[data-clock-dim-value]"), landscapeButton = page.querySelector("[data-landscape]"), neonButton = page.querySelector("[data-neon]"), standbyButton = page.querySelector("[data-standby]"), clockHero = page.querySelector("[data-clock-hero]");
     let selectedPreset = loadPresetSeconds();
-    let remaining = selectedPreset, timerId = null;
+    let focusSession = getFocusSession();
+    let remaining = focusSession && (focusSession.status === "active" || focusSession.status === "paused")
+        ? remainingSeconds(focusSession)
+        : selectedPreset;
+    let timerId = null;
     let landscape = loadFlag(LANDSCAPE_KEY, false);
     let neon = loadFlag(NEON_KEY, true);
     let clockStyle = loadClockStyle();
@@ -154,18 +160,19 @@ export default function ClockPage() {
     const resetButton = page.querySelector("[data-reset]");
 
     const paintIconButton = (button, icon, label) => {
-        button.textContent = icon;
+        button.innerHTML = iconMarkup(icon, { size: 17 });
         button.setAttribute("aria-label", label);
         button.title = label;
     };
 
     const paintStartState = () => {
-        if (timerId)
-            paintIconButton(start, "\u23F8", "Pause timer");
+        focusSession = getFocusSession();
+        if (focusSession && focusSession.status === "active")
+            paintIconButton(start, "pause", "Pause timer");
         else if (remaining <= 0)
-            paintIconButton(start, "\u21BB", "Start timer");
+            paintIconButton(start, "restart", "Start timer");
         else
-            paintIconButton(start, "\u25B6", "Start timer");
+            paintIconButton(start, "play", "Start timer");
     };
 
     const applyDimLevel = () => {
@@ -190,9 +197,9 @@ export default function ClockPage() {
         neonButton.classList.toggle("active", neon);
         standbyButton.classList.toggle("active", standby);
 
-        paintIconButton(landscapeButton, landscape ? "\u2921" : "\u2922", landscape ? "Exit landscape" : "Landscape mode");
-        paintIconButton(neonButton, neon ? "\u2726" : "\u2727", neon ? "Neon style on" : "Neon style off");
-        paintIconButton(standbyButton, standby ? "\u2600" : "\u263D", standby ? "Exit standby" : "Standby mode");
+        paintIconButton(landscapeButton, "landscape", landscape ? "Exit landscape" : "Landscape mode");
+        paintIconButton(neonButton, "star", neon ? "Neon style on" : "Neon style off");
+        paintIconButton(standbyButton, standby ? "sun" : "moon", standby ? "Exit standby" : "Standby mode");
         clockDimRow.style.display = standby ? "grid" : "none";
     };
 
@@ -309,6 +316,9 @@ export default function ClockPage() {
                 remaining = selectedPreset;
                 clearInterval(timerId);
                 timerId = null;
+                resetFocus();
+                focusSession = null;
+                completion.hidden = true;
                 paintStartState();
                 status.textContent = "Preset selected.";
                 savePresetSeconds(selectedPreset);
@@ -321,6 +331,27 @@ export default function ClockPage() {
     };
 
     const drawTimer = () => { timer.textContent = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`; };
+    const syncFocus = () => {
+        focusSession = getFocusSession();
+        if (!focusSession)
+            return;
+        remaining = remainingSeconds(focusSession);
+        drawTimer();
+        if (focusSession.status === "completed") {
+            clearInterval(timerId);
+            timerId = null;
+            completion.hidden = false;
+            status.textContent = focusSession.label === "Break" ? "Break complete." : "Focus complete.";
+        } else if (focusSession.status === "active")
+            status.textContent = `${focusSession.label || "Focus"} session active.`;
+        else if (focusSession.status === "paused")
+            status.textContent = "Timer paused.";
+        paintStartState();
+    };
+    const beginTicker = () => {
+        clearInterval(timerId);
+        timerId = window.setInterval(syncFocus, 1000);
+    };
     const drawClockValue = text => {
         if (clockStyle !== "flip") {
             time.textContent = text;
@@ -361,45 +392,56 @@ export default function ClockPage() {
         page.style.setProperty("--clock-hue", String((now.getSeconds() * 6 + now.getMinutes() * 2) % 360));
     };
     start.onclick = () => {
-        if (timerId) {
-            clearInterval(timerId);
-            timerId = null;
-            paintStartState();
+        focusSession = getFocusSession();
+        if (focusSession && focusSession.status === "active") {
+            pauseFocus();
+            syncFocus();
             status.textContent = "Timer paused.";
             return;
         }
 
-        paintStartState();
-        status.textContent = "Focus session active.";
-        timerId = setInterval(() => {
-            if (remaining <= 1) {
-                clearInterval(timerId);
-                timerId = null;
-                remaining = 0;
-                paintStartState();
-                status.textContent = "Session complete.";
-            } else {
-                remaining -= 1;
-                drawTimer();
-            }
-        }, 1000);
-        paintStartState();
+        completion.hidden = true;
+        if (focusSession && focusSession.status === "paused")
+            resumeFocus();
+        else
+            startFocus(remaining > 0 ? remaining : selectedPreset, "Focus");
+        beginTicker();
+        syncFocus();
     };
 
     resetButton.onclick = () => {
         clearInterval(timerId);
         timerId = null;
+        resetFocus();
+        focusSession = null;
         remaining = selectedPreset;
+        completion.hidden = true;
         drawTimer();
         paintStartState();
         status.textContent = "Timer reset.";
+    };
+
+    page.querySelector("[data-again]").onclick = () => {
+        remaining = selectedPreset;
+        completion.hidden = true;
+        startFocus(selectedPreset, "Focus");
+        beginTicker();
+        syncFocus();
+    };
+
+    page.querySelector("[data-break]").onclick = () => {
+        remaining = 5 * 60;
+        completion.hidden = true;
+        startFocus(remaining, "Break");
+        beginTicker();
+        syncFocus();
     };
 
     focusButton.onclick = () => {
         document.body.classList.toggle("arc-focus-mode");
         const active = document.body.classList.contains("arc-focus-mode");
 
-        paintIconButton(focusButton, active ? "\u25CE" : "\u25D0", active ? "Exit focus mode" : "Focus mode");
+        paintIconButton(focusButton, active ? "control" : "apps", active ? "Exit focus mode" : "Focus mode");
     };
     landscapeButton.onclick = () => {
         landscape = !landscape;
@@ -438,10 +480,13 @@ export default function ClockPage() {
         saveClockDim(standbyDim);
     };
 
-    paintIconButton(resetButton, "\u21BA", "Reset timer");
-    paintIconButton(focusButton, "\u25D0", "Focus mode");
+    paintIconButton(resetButton, "restart", "Reset timer");
+    paintIconButton(focusButton, "apps", "Focus mode");
 
-    updateClock(); drawTimer(); renderPresets(); drawClockStyles(); drawClockOptions(); drawClockMotions(); applyDimLevel(); applyModes(); paintStartState();
+    if (focusSession && focusSession.status === "active")
+        beginTicker();
+    completion.hidden = !focusSession || focusSession.status !== "completed";
+    updateClock(); syncFocus(); drawTimer(); renderPresets(); drawClockStyles(); drawClockOptions(); drawClockMotions(); applyDimLevel(); applyModes(); paintStartState();
     const clockId = setInterval(() => {
         if (!page.parentNode) {
             clearInterval(clockId);

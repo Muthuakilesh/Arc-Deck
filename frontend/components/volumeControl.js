@@ -3,6 +3,7 @@ import { on } from "../js/events.js";
 import { adjustVolume, changeVolume, setDragging, syncVolume, toggleMute } from "../js/volume.js";
 import { focusedApp } from "../js/apps.js";
 import { loadSessions, setSessionMute } from "../js/mixer.js";
+import { iconMarkup } from "./icon.js";
 
 function clean(value) {
     return String(value || "").toLowerCase().trim();
@@ -34,7 +35,7 @@ export default function VolumeControl() {
     container.innerHTML = `
         <div class="volume-heading">
             <div><p class="eyebrow">PC AUDIO</p><h3>Volume</h3></div>
-            <button class="mute-button" type="button" data-mute aria-label="Mute volume">&#128266;</button>
+            <button class="mute-button" type="button" data-mute aria-label="Mute volume">${iconMarkup("volume-up", { size: 18 })}</button>
         </div>
         <div class="volume-readout"><strong data-value>--%</strong><span data-status>Checking PC…</span></div>
         <input class="volume-slider" data-slider type="range" min="0" max="100" step="1" value="50" aria-label="PC volume">
@@ -85,7 +86,7 @@ export default function VolumeControl() {
         paintTrack(data.volume);
 
         const muted = Boolean(data.muted);
-        mute.innerHTML = muted ? "&#128263;" : "&#128266;";
+        mute.innerHTML = iconMarkup(muted ? "volume-mute" : "volume-up", { size: 18 });
         mute.setAttribute("aria-label", muted ? "Unmute volume" : "Mute volume");
         mute.classList.toggle("is-muted", muted);
         status.textContent = muted ? "Muted" : "Connected to PC";

@@ -1,24 +1,24 @@
 import router from "../js/router.js";
-import { THEMES, UI_STYLES, applyTheme, applyUiStyle, currentTheme, currentUiStyle } from "../js/theme.js";
+import { THEMES, applyTheme, currentTheme } from "../js/theme.js";
 import { closeSheet, sheetIsOpen, sheetTitle, showSheet } from "./sheet.js";
+import { icon as renderIcon } from "./icon.js";
 
 // Seven equal buttons on a 320px screen is 45px each with no room for labels,
 // so the dock keeps the five pages reached most often and the rest move into
 // a sheet behind "More".
 const PRIMARY = [
-    { icon: "\u2302", page: "home", label: "Home" },
-    { icon: "\u25A6", page: "apps", label: "Apps" },
-    { icon: "\u266A", page: "media", label: "Media" },
-    { icon: "\u25CE", page: "control", label: "Control" }
+    { icon: "home", page: "home", label: "Home" },
+    { icon: "apps", page: "apps", label: "Apps" },
+    { icon: "media", page: "media", label: "Media" },
+    { icon: "control", page: "control", label: "Control" }
 ];
 
 const OVERFLOW = [
-    { icon: "\u26A1", page: "scenes", label: "Scenes" },
-    { icon: "\u2726", page: "games", label: "Games" },
-    { icon: "\u25D8", page: "gamepad", label: "Gamepad" },
-    { icon: "\u25A3", page: "screen", label: "Screen" },
-    { icon: "\u2637", page: "stats", label: "Stats" },
-    { icon: "\u25F7", page: "clock", label: "Clock" }
+    { icon: "scenes", page: "scenes", label: "Scenes" },
+    { icon: "gamepad", page: "gamepad", label: "Gamepad" },
+    { icon: "screen", page: "screen", label: "Screen" },
+    { icon: "stats", page: "stats", label: "Stats" },
+    { icon: "clock", page: "clock", label: "Clock" }
 ];
 
 const HOLD_MS = 450;
@@ -90,16 +90,15 @@ function item(entry, className) {
     button.dataset.tip = entry.label;
     button.title = entry.label;
 
-    const icon = document.createElement("span");
-    icon.className = "dock-icon";
-    icon.textContent = entry.icon;
-    icon.setAttribute("aria-hidden", "true");
+    const iconCell = document.createElement("span");
+    iconCell.className = "dock-icon";
+    iconCell.appendChild(renderIcon(entry.icon, { size: 20 }));
 
     const label = document.createElement("span");
     label.className = "dock-label";
     label.textContent = entry.label;
 
-    button.appendChild(icon);
+    button.appendChild(iconCell);
     button.appendChild(label);
 
     hint(button);
@@ -145,9 +144,8 @@ function openSheet() {
             button.classList.add("active");
 
         const dot = document.createElement("span");
-        dot.className = "dock-icon";
-        dot.style.color = theme.swatch;
-        dot.textContent = "\u25CF";
+        dot.className = "theme-dot";
+        dot.style.background = theme.swatch;
 
         button.insertBefore(dot, button.firstChild);
 
@@ -160,38 +158,7 @@ function openSheet() {
         themeGrid.appendChild(button);
     });
 
-    const styleTitle = sheetTitle("STYLE");
-    styleTitle.style.marginTop = "14px";
-
-    const styleGrid = document.createElement("div");
-    styleGrid.className = "sheet-grid";
-
-    UI_STYLES.forEach(style => {
-        const button = document.createElement("button");
-
-        button.type = "button";
-        button.className = "sheet-item";
-        button.textContent = style.label;
-
-        if (currentUiStyle() === style.id)
-            button.classList.add("active");
-
-        const dot = document.createElement("span");
-        dot.className = "dock-icon";
-        dot.textContent = "\u25F0";
-
-        button.insertBefore(dot, button.firstChild);
-
-        button.onclick = () => {
-            applyUiStyle(style.id);
-            closeSheet();
-            openSheet();
-        };
-
-        styleGrid.appendChild(button);
-    });
-
-    showSheet([title, grid, themeTitle, themeGrid, styleTitle, styleGrid]);
+    showSheet([title, grid, themeTitle, themeGrid]);
 }
 
 
@@ -212,7 +179,7 @@ export default function Dock() {
         dock.appendChild(button);
     });
 
-    const more = item({ icon: "\u22EF", page: "more", label: "More" }, "dock-item");
+    const more = item({ icon: "more", page: "more", label: "More" }, "dock-item");
 
     // "More" is active whenever the visible page is one of the ones it holds.
     if (OVERFLOW.some(entry => entry.page === router.current))

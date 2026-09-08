@@ -23,6 +23,9 @@
     <link rel="stylesheet" href="./css/components.css">
     <link rel="stylesheet" href="./css/animations.css">
     <link rel="stylesheet" href="./css/themes.css">
+    <!-- Loaded last so its @layer components rules win the cascade over the
+         plain CSS above without having to touch every component's markup. -->
+    <link rel="stylesheet" href="./css/tailwind.generated.css">
 </head>
 
 <body>

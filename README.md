@@ -11,6 +11,20 @@ python app.py            # prints the pairing PIN, serves the UI on :5000
 
 Set `ARCDECK_PIN` to choose the PIN yourself.
 
+## Frontend styling
+
+The UI is still plain ES modules with no bundler — Tailwind is only a CSS
+compile step, not a framework migration. After changing Tailwind classes in
+`frontend/`, rebuild the generated stylesheet so the change actually ships:
+
+```bash
+npm install
+npm run build:css      # or: npm run watch:css
+```
+
+`frontend/css/tailwind.generated.css` is committed, since the Flask server has
+no build step of its own — forgetting to rebuild leaves it stale.
+
 ## Security controls
 
 Arc-Deck now includes baseline API hardening for LAN deployments:
@@ -70,8 +84,9 @@ shortcuts.
 
 A scene is one button that runs a sequence across several apps, and unlike
 `apps.json` it is built on the phone (More → Scenes) and stored in
-`backend/data/scenes.json`. A step is either an app plus one of the actions that
-app already declares, or a pause:
+`backend/data/scenes.json`. Legacy steps can use an app action or a pause. The
+editor also supports typed intention steps for waiting for an app, changing
+master/app audio, and starting a Focus timer:
 
 ```json
 {
@@ -82,23 +97,67 @@ app already declares, or a pause:
   "steps": [
     { "app": "Discord", "command": "hotkey:ctrl+shift+m", "label": "Mute" },
     { "delay": 500 },
-    { "app": "Elden Ring", "command": "launch" }
+    { "app": "Elden Ring", "command": "launch" },
+    { "type": "wait_for_app", "app": "Elden Ring", "timeout": 5000 },
+    { "type": "audio_master", "volume": 60 },
+    { "type": "focus_timer", "seconds": 1500, "label": "Game night" }
   ]
 }
 ```
 
-The editor only ever offers commands already in `apps.json`, and the server
-checks that again on save and once more on every run, so a scene can only
-rearrange buttons the deck already had. A scene holds up to 20 steps, a pause up
-to 2000ms, and a run stops at the first step that fails and reports its number.
-Pinned scenes get a one-tap chip on the home screen.
+The editor only ever offers commands already in the configured app catalog
+(`apps.json` plus user-managed `custom_apps.json` games), and the server checks
+that again on save and once more on every run. A scene can only rearrange
+buttons and declared capabilities the deck already had. A scene holds up to 20
+steps, a pause up to 2000ms, and app readiness waits up to 15 seconds.
+Runs expose a run ID, step progress, cancellation, and a final outcome. Pinned
+scenes get a one-tap chip on the home screen, and recent run outcomes are kept
+in local activity history.
+
+Scene runs are available through these API endpoints:
+
+- `POST /api/scenes/<id>/start` — start an observable asynchronous run.
+- `GET /api/scenes/runs/<run_id>` — read current step/status.
+- `POST /api/scenes/runs/<run_id>/cancel` — request cancellation.
+- `GET /api/scenes/runs` — read recent completed/failed/cancelled runs.
+
+The existing `POST /api/scenes/<id>/run` endpoint remains available for
+backward compatibility.
+
+## Smart companion
+
+Home includes a small Context Hub that prioritizes the current foreground app,
+active Focus session, sustained system pressure, and deterministic workflow
+suggestions. Suggestions explain both the action and the evidence behind it.
+They never run automatically and offer `Accept / Run`, `Not now`, and
+`Don't suggest this` feedback.
+
+ArcDeck stores a bounded, local SQLite activity history in
+`backend/data/activity.db`. It records stable app/Scene/action identifiers and
+outcomes, not typed text, URLs, window titles, clipboard data, screenshots, or
+screen contents. Home settings provide independent history and suggestion
+toggles, retention selection, export, and clear-history controls.
+
+The activity endpoints are:
+
+- `GET /api/activity` — inspect recent allowlisted events.
+- `GET /api/activity/summary` — read local aggregates used for ranking.
+- `GET /api/activity/suggestions` — read deterministic recommendations.
+- `GET/POST /api/activity/settings` — inspect or update privacy settings.
+- `DELETE /api/activity` — clear local activity history.
 
 ## In focus
 
-The home screen puts the actions of whatever window is in front on the PC at the
-top, so the usual case takes no navigation. It only appears when the foreground
-app is one of the apps in `apps.json` — matched on `process`, so an app with no
-usable process name never shows up there.
+The home screen puts the actions of whatever window is in front on the PC near
+the top, so the usual case takes no navigation. It only appears when the
+foreground app is one of the apps in `apps.json` — matched on `process`, so an
+app with no usable process name never shows up there. The Context Hub can also
+show the current Focus session, a sustained-load warning, or one explained
+workflow suggestion.
+
+Focus Sessions persist across Home/Clock navigation and reloads. They support
+pause, reset, completion state, restart, and a five-minute break action. Scenes
+can start a Focus timer as a typed `focus_timer` step.
 
 Off Windows there is no foreground window to read; set
 `ARCDECK_FAKE_FOREGROUND=chrome.exe` to develop the card against a pretend one.
@@ -122,3 +181,40 @@ The media page lists the apps Windows currently has an audio session for and
 gives each one its own slider and mute, which is how you turn the game down
 without turning the call down. Off Windows the same dummy backend that fakes the
 master volume fakes a few sessions.
+
+## Clipboard bridge
+
+The Control page includes an opt-in Clipboard Bridge for authenticated,
+bidirectional text synchronization between the phone and the Windows PC. The
+`Clipboard Sync` setting is stored locally on the phone and defaults to off.
+
+When enabled:
+
+- `Read PC` loads the current Windows text clipboard into ArcDeck.
+- PC clipboard changes are sent to the connected phone over the authenticated
+  Socket.IO connection.
+- `Send to PC` writes the text field to the Windows clipboard and updates the
+  shared in-memory state.
+- `Copy to phone` uses the browser's Clipboard API to copy the text on the phone.
+
+The initial connection establishes the current PC text as the shared baseline;
+it does not overwrite either side. Updates use a server-side version and
+content comparison to prevent feedback loops. Disconnecting does not modify
+the PC clipboard. Clipboard contents are never written to activity history,
+logs, analytics, or browser storage. The bridge supports text only, is limited
+to 100,000 characters, and requires Windows for PC monitoring and writes.
+
+## Custom games
+
+The Apps page's Games filter includes an `Add game` action. It stores user-added
+games and image overrides separately in `backend/data/custom_apps.json`, so
+updating the shipped `backend/data/apps.json` does not overwrite them. A game
+can have:
+
+- an executable path;
+- an optional process name;
+- an optional image URL or local `/images/...` path;
+- the normal launch/focus/close behavior.
+
+Open a game from the Apps page and choose `Edit game` to change its path or
+image. Custom game entries are local configuration and are ignored by Git.

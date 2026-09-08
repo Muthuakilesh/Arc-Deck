@@ -2,9 +2,16 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+node_modules/
 
 # Generated on first run: contains the pairing PIN and phone tokens
 backend/data/auth.json
 
 # Written by the phone: the scenes you build on it
 backend/data/scenes.json
+
+# Local privacy-controlled activity history
+backend/data/activity.db*
+
+# User-added or overridden games
+backend/data/custom_apps.json

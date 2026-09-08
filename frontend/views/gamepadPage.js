@@ -1,17 +1,18 @@
 import mountChrome from "../js/chrome.js";
+import PageIntro from "../components/pageIntro.js";
 
 import {
     PROFILES,
     currentProfile,
     holdKey,
+    profileForApp,
     profileById,
     releaseAll,
-    rememberProfile
+    rememberProfile,
+    saveCustomProfile
 } from "../js/gamepad.js";
-
-
-// How far from where the thumb landed counts as pushing the stick, in pixels.
-const DEADZONE = 14;
+import state from "../js/state.js";
+import { toast } from "../js/toast.js";
 
 
 export default function GamepadPage() {
@@ -22,11 +23,15 @@ export default function GamepadPage() {
 
     let profile = currentProfile();
 
-    const header = document.createElement("h2");
-    header.textContent = "Gamepad";
+    const header = PageIntro({ eyebrow: "PLAY MODE", title: "Gamepad", icon: "gamepad", meta: "Touch controller" });
 
     const picker = document.createElement("div");
     picker.className = "pad-profiles";
+
+    const customize = document.createElement("button");
+    customize.type = "button";
+    customize.className = "chip";
+    customize.textContent = "Customize";
 
     const card = document.createElement("div");
     card.className = "glass card pad-card";
@@ -133,6 +138,8 @@ export default function GamepadPage() {
 
             picker.appendChild(button);
         });
+
+        picker.appendChild(customize);
     }
 
     let originX = 0;
@@ -144,10 +151,11 @@ export default function GamepadPage() {
 
         // Diagonals matter (strafing while walking), so each axis is judged on
         // its own rather than picking a single direction.
-        setKey(profile.stick.left, dx < -DEADZONE);
-        setKey(profile.stick.right, dx > DEADZONE);
-        setKey(profile.stick.up, dy < -DEADZONE);
-        setKey(profile.stick.down, dy > DEADZONE);
+        const deadzone = Number(profile.deadzone) || 14;
+        setKey(profile.stick.left, dx < -deadzone);
+        setKey(profile.stick.right, dx > deadzone);
+        setKey(profile.stick.up, dy < -deadzone);
+        setKey(profile.stick.down, dy > deadzone);
 
         const limit = 34;
         const nx = Math.max(-limit, Math.min(limit, dx));
@@ -204,6 +212,51 @@ export default function GamepadPage() {
 
     renderPicker();
     renderButtons();
+
+    customize.onclick = () => {
+        const label = window.prompt("Profile name", profile.label + " Custom");
+        if (!label)
+            return;
+        const currentKeys = profile.buttons.map(button => button.key).join(", ");
+        const rawKeys = window.prompt("Six button keys, separated by commas", currentKeys);
+        if (!rawKeys)
+            return;
+        const keys = rawKeys.split(",").map(key => key.trim());
+        const deadzone = window.prompt("Stick deadzone (6-40)", String(profile.deadzone || 14));
+        const app = window.prompt("Associate with configured app (optional)", state.foreground && state.foreground.app || "");
+        const saved = saveCustomProfile({
+            label: label,
+            stick: { ...profile.stick },
+            buttons: profile.buttons.map((button, index) => ({ key: keys[index], label: button.label })),
+            deadzone: deadzone,
+            app: app
+        });
+        if (saved.error) {
+            toast(saved.error);
+            return;
+        }
+        profile = saved;
+        rememberProfile(profile.id);
+        renderPicker();
+        renderButtons();
+        toast("Saved " + profile.label);
+    };
+    const suggested = profileForApp(state.foreground && state.foreground.app);
+    if (suggested && suggested.id !== profile.id) {
+        const useSuggested = document.createElement("button");
+        useSuggested.type = "button";
+        useSuggested.className = "chip pad-suggestion";
+        useSuggested.textContent = "Use " + suggested.label + " for " + suggested.app;
+        useSuggested.onclick = () => {
+            releaseHeld();
+            profile = suggested;
+            rememberProfile(profile.id);
+            renderPicker();
+            renderButtons();
+            useSuggested.remove();
+        };
+        picker.appendChild(useSuggested);
+    }
 
     return page;
 }

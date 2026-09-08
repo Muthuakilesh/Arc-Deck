@@ -1,4 +1,5 @@
 import mountChrome from "../js/chrome.js";
+import PageIntro from "../components/pageIntro.js";
 
 import { fetchFrame, tapScreen } from "../js/screen.js";
 import { toast } from "../js/toast.js";
@@ -33,9 +34,9 @@ export default function ScreenPage() {
     let badStreak = 0;
     let goodStreak = 0;
     let errorStreak = 0;
+    let lastFrameAt = 0;
 
-    const header = document.createElement("h2");
-    header.textContent = "Screen";
+    const header = PageIntro({ eyebrow: "LIVE DISPLAY", title: "Screen", icon: "screen", meta: "Remote viewport" });
 
     const picker = document.createElement("div");
     picker.className = "pad-profiles module module-screen-controls";
@@ -63,6 +64,11 @@ export default function ScreenPage() {
     pause.type = "button";
     pause.className = "chip";
     pause.textContent = "Pause";
+
+    const reconnect = document.createElement("button");
+    reconnect.type = "button";
+    reconnect.className = "chip";
+    reconnect.textContent = "Reconnect";
 
     card.appendChild(shot);
     card.appendChild(marker);
@@ -138,7 +144,8 @@ export default function ScreenPage() {
         const mode = autoMode ? "Auto" : "Manual";
         const lag = latency ? Math.round(latency) + "ms" : "--";
 
-        telemetry.textContent = "Mode: " + mode + " \u00b7 " + rate.label + " \u00b7 " + lag + (extra ? " \u00b7 " + extra : "");
+        const age = lastFrameAt ? Math.max(0, Math.round((Date.now() - lastFrameAt) / 1000)) + "s old" : "No frame";
+        telemetry.textContent = (running ? "LIVE" : "PAUSED") + " \u00b7 " + mode + " \u00b7 " + rate.label + " \u00b7 " + lag + " \u00b7 " + age + (extra ? " \u00b7 " + extra : "");
     }
 
     function tuneByLatency() {
@@ -229,17 +236,19 @@ export default function ScreenPage() {
 
             url = next;
             shot.src = next;
+            lastFrameAt = Date.now();
             const elapsed = performance.now() - startedAt;
 
             latency = latency ? (latency * 0.7 + elapsed * 0.3) : elapsed;
             errorStreak = 0;
             tuneByLatency();
 
-            status.textContent = rate.label + " \u00b7 tap the picture to click there";
+            status.textContent = "Live \u00b7 " + rate.label + " \u00b7 tap the picture to click there";
             updateTelemetry();
             schedule();
         }).catch(error => {
             status.textContent = String(error.message || error);
+            updateTelemetry("connection error");
             errorStreak += 1;
 
             if (autoMode && errorStreak >= 2 && rateIndex() > 0) {
@@ -316,6 +325,20 @@ export default function ScreenPage() {
     };
 
     picker.appendChild(pause);
+    reconnect.onclick = () => {
+        stop();
+        running = true;
+        started = false;
+        badStreak = 0;
+        goodStreak = 0;
+        errorStreak = 0;
+        latency = 0;
+        pause.textContent = "Pause";
+        status.textContent = "Reconnecting\u2026";
+        updateTelemetry("reconnecting");
+        tick();
+    };
+    picker.appendChild(reconnect);
 
     loadMode();
     updatePicker();

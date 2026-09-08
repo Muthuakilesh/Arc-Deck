@@ -1,0 +1,14 @@
+{
+  "name": "arc-deck",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Build tooling for Arc-Deck's frontend (Tailwind CSS compiler only — the app itself is plain ES modules, no bundler).",
+  "scripts": {
+    "build:css": "tailwindcss -i ./frontend/css/tailwind.css -o ./frontend/css/tailwind.generated.css --minify",
+    "watch:css": "tailwindcss -i ./frontend/css/tailwind.css -o ./frontend/css/tailwind.generated.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

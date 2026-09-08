@@ -1,6 +1,8 @@
 import mountChrome from "../js/chrome.js";
 import Trackpad from "../components/trackpad.js";
 import VolumeControl from "../components/volumeControl.js";
+import PageIntro from "../components/pageIntro.js";
+import ClipboardCard from "../components/clipboardCard.js";
 import { post } from "../js/api.js";
 
 export default function ControlPage() {
@@ -10,8 +12,7 @@ export default function ControlPage() {
     mountChrome();
 
 
-    const header = document.createElement('h2');
-    header.textContent = 'Controls';
+    const header = PageIntro({ eyebrow: 'REMOTE INTERFACE', title: 'Control surface', icon: 'control', meta: 'Pointer / keyboard' });
     page.appendChild(header);
 
     const modules = document.createElement('div');
@@ -22,6 +23,7 @@ export default function ControlPage() {
     modules.appendChild(createKeyboardInput());
     modules.appendChild(createPowerCard());
     modules.appendChild(VolumeControl());
+    modules.appendChild(ClipboardCard());
     page.appendChild(modules);
 
     return page;
@@ -118,6 +120,7 @@ function createPowerCard() {
         <p class="eyebrow">PC POWER</p>
         <h3>Power options</h3>
         <div class="power-actions">
+            <button type="button" data-power="lock">Lock</button>
             <button type="button" data-power="sleep">Sleep</button>
             <button type="button" data-power="restart">Restart</button>
             <button type="button" class="danger-button" data-power="shutdown">Shut down</button>

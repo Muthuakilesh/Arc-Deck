@@ -9,10 +9,19 @@ export default function LauncherCard(app) {
     card.type = "button";
     card.className = "glass card module module-launcher launcher-card";
     card.dataset.app = app.name || "";
+    card.dataset.category = app.category || "apps";
 
     const icon = document.createElement("div");
     icon.className = "launcher-icon";
-    icon.textContent = app.icon || "\u25C8";
+    if (app.image) {
+        const image = document.createElement("img");
+        image.src = app.image;
+        image.alt = "";
+        image.onerror = () => image.remove();
+        icon.appendChild(image);
+    }
+    if (!icon.childNodes.length)
+        icon.textContent = app.icon || "\u25C8";
     icon.setAttribute("aria-hidden", "true");
 
     const title = document.createElement("h3");

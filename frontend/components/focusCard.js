@@ -26,6 +26,15 @@ export default function FocusCard() {
     const heading = document.createElement("h3");
     heading.className = "focus-name";
 
+    const appIcon = document.createElement("span");
+    appIcon.className = "focus-app-icon";
+
+    const appName = document.createElement("span");
+    appName.className = "focus-app-name";
+
+    heading.appendChild(appIcon);
+    heading.appendChild(appName);
+
     const title = document.createElement("p");
     title.className = "focus-title";
 
@@ -38,7 +47,7 @@ export default function FocusCard() {
     card.appendChild(actions);
 
     function run(app, action) {
-        return runAppAction(app.name, action.command).then(result => {
+        return runAppAction(app.name, action.command, "home.focus").then(result => {
             toast(result && result.error ? result.error : (action.label || "Done"));
         });
     }
@@ -61,7 +70,8 @@ export default function FocusCard() {
         if (!app)
             return;
 
-        heading.textContent = (app.icon ? app.icon + " " : "") + app.name;
+        appIcon.textContent = app.icon || "\u25C8";
+        appName.textContent = app.name;
         title.textContent = state.foreground ? state.foreground.title || "" : "";
 
         while (actions.firstChild)
@@ -69,8 +79,11 @@ export default function FocusCard() {
 
         const declared = Array.isArray(app.actions) ? app.actions : [];
 
-        declared.slice(0, INLINE).forEach(action => {
-            const element = button(action.label || "Action", "focus-action");
+        declared.slice(0, INLINE).forEach((action, index) => {
+            const hierarchy = index === 0
+                ? " focus-action-primary"
+                : (index === 1 ? " focus-action-secondary" : " focus-action-compact");
+            const element = button(action.label || "Action", "focus-action" + hierarchy);
 
             element.onclick = () => run(app, action);
             actions.appendChild(element);

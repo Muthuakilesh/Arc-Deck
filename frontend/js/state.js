@@ -9,9 +9,6 @@ page:
 theme:
 "default",
 
-uiStyle:
-"neon-cyber",
-
 
 
 wallpaper:
@@ -65,6 +62,14 @@ scenes:[]
 ,favorites:[]
 
 ,recents:[]
+
+,clipboard:
+{
+	enabled:false,
+	available:false,
+	text:"",
+	version:0
+}
 
 
 

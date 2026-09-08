@@ -112,23 +112,23 @@ export function applyRunning(names, foreground) {
 }
 
 
-export function launchApp(name) {
+export function launchApp(name, source = "apps") {
     const app = normalizeName(name);
 
     if (app)
         recordRecentApp(app);
 
-    return post("/apps/open", { name: name });
+    return post("/apps/open", { name: name, source: source });
 }
 
 
-export function runAppAction(name, action) {
+export function runAppAction(name, action, source = "apps") {
     const app = normalizeName(name);
 
     if (app)
         recordRecentApp(app);
 
-    return post("/apps/action", { name: name, action: action });
+    return post("/apps/action", { name: name, action: action, source: source });
 }
 
 export function getFavoriteNames() {

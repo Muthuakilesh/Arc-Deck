@@ -1,8 +1,9 @@
 import { loadApps } from "../js/apps.js";
-import { loadScenes, runScene } from "../js/scenes.js";
+import { cancelScene, loadSceneRuns, loadScenes, runScene } from "../js/scenes.js";
 import { off, on } from "../js/events.js";
 import { toast } from "../js/toast.js";
 import state from "../js/state.js";
+import { icon as renderIcon } from "./icon.js";
 
 import openSceneEditor from "./sceneEditor.js";
 
@@ -33,10 +34,23 @@ function card(scene) {
     run.appendChild(count);
 
     run.onclick = () => {
+        if (run.classList.contains("running")) {
+            run.textContent = "Cancelling\u2026";
+            cancelScene(scene.id);
+            return;
+        }
+
         run.classList.add("running");
 
-        runScene(scene.id).then(result => {
+        runScene(scene.id, progress => {
+            count.textContent = `Step ${progress.step || 0} of ${progress.steps || 0}`;
+        }).then(result => {
             run.classList.remove("running");
+            run.innerHTML = "";
+            run.appendChild(icon);
+            run.appendChild(name);
+            run.appendChild(count);
+            count.textContent = (scene.steps || []).length + " steps";
 
             if (result && result.error) {
                 const where = result.step
@@ -49,14 +63,14 @@ function card(scene) {
             const elapsed = result && typeof result.elapsed_ms === "number"
                 ? " in " + result.elapsed_ms + "ms"
                 : "";
-            toast("Ran " + scene.name + elapsed);
+            toast(result && result.status === "cancelled" ? "Cancelled " + scene.name : "Ran " + scene.name + elapsed);
         });
     };
 
     const edit = document.createElement("button");
     edit.type = "button";
     edit.className = "scene-edit";
-    edit.textContent = "\u270E";
+    edit.appendChild(renderIcon("edit", { size: 16 }));
     edit.setAttribute("aria-label", "Edit " + scene.name);
     edit.onclick = () => openSceneEditor(scene);
 
@@ -138,6 +152,13 @@ export default function SceneGrid() {
     // The editor picks steps out of the app list, so it has to be loaded too.
     loadApps();
     loadScenes().then(render);
+    loadSceneRuns(1).then(data => {
+        const latest = data && Array.isArray(data.runs) ? data.runs[0] : null;
+        if (!latest)
+            return;
+        const when = new Date(latest.at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+        diagnostics.textContent = `${latest.subject} \u00b7 ${latest.outcome} \u00b7 ${when}`;
+    });
     on("scenes:update", repaint);
     on("scenes:run", paintDiagnostics);
     paintDiagnostics(state.sceneRun);

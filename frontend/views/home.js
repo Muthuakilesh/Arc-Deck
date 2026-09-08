@@ -1,13 +1,16 @@
 import mountChrome from "../js/chrome.js";
 import HeroCard from "../components/heroCard.js";
-import GlassCard from "../components/glassCard.js";
+import GlassCard, { paintStatGauge, statGaugeMarkup } from "../components/glassCard.js";
 import FocusCard from "../components/focusCard.js";
 import RunningStrip from "../components/runningStrip.js";
 import SceneStrip from "../components/sceneStrip.js";
 import VolumeControl from "../components/volumeControl.js";
 import LauncherCard from "../components/launcherCard.js";
+import ContextHub from "../components/contextHub.js";
 import { closeSheet, sheetTitle, showSheet } from "../components/sheet.js";
-import { THEMES, UI_STYLES, applyTheme, applyUiStyle, currentTheme, currentUiStyle } from "../js/theme.js";
+import { icon as renderIcon, iconMarkup } from "../components/icon.js";
+import { THEMES, applyTheme, currentTheme } from "../js/theme.js";
+import { clearActivityEvents, loadActivityEvents, loadActivitySettings, saveActivitySettings } from "../js/activity.js";
 
 import { off, on } from "../js/events.js";
 import { getFavoriteNames, getRecentNames, loadApps } from "../js/apps.js";
@@ -19,9 +22,9 @@ const FREE_POSITIONS_KEY = "arcdeck.homeFreePositions";
 const CHECKLIST_KEY = "arcdeck.utilChecklist";
 const NOTES_KEY = "arcdeck.utilNotes";
 const STREAK_KEY = "arcdeck.utilStreak";
+const ONBOARDING_KEY = "arcdeck.onboardingSeen";
 const PROFILE_KEYS = [
     "arcdeck.theme",
-    "arcdeck.uiStyle",
     LAYOUT_KEY,
     "arcdeck.clockPresetSeconds",
     "arcdeck.clockLandscape",
@@ -41,10 +44,11 @@ const PROFILE_KEYS = [
 ];
 const DEFAULT_LAYOUT = [
     { id: "hero", label: "Hero", visible: true },
+    { id: "context", label: "Right Now", visible: true },
+    { id: "focus", label: "In Focus", visible: true },
     { id: "stats", label: "Stats", visible: true },
     { id: "favorites", label: "Favorites", visible: true },
     { id: "recents", label: "Recents", visible: true },
-    { id: "focus", label: "In Focus", visible: true },
     { id: "scenes", label: "Scenes", visible: true },
     { id: "running", label: "Running Apps", visible: true },
     { id: "volume", label: "Volume", visible: true },
@@ -193,9 +197,26 @@ export default function Home() {
     settingsBar.innerHTML = "<button type='button' class='control-button icon-only-button home-settings-button' title='Home settings' aria-label='Home settings' data-home-settings>\u2699</button>";
     page.appendChild(settingsBar);
 
-    const renderLookChips = (themeChips, styleChips) => {
+    if (!localStorage.getItem(ONBOARDING_KEY)) {
+        const onboarding = document.createElement("div");
+        onboarding.className = "glass card module onboarding-banner";
+        onboarding.innerHTML = "<span class='onboarding-icon'>" + iconMarkup("brand", { size: 18 }) + "</span>" +
+            "<p><strong>ArcDeck is ready</strong><small>Focused controls appear here. Find every workspace under More.</small></p>" +
+            "<button type='button' class='icon-only-button' data-onboarding-dismiss title='Dismiss' aria-label='Dismiss'>" + iconMarkup("close", { size: 16 }) + "</button>";
+        onboarding.querySelector("[data-onboarding-dismiss]").onclick = () => {
+            try {
+                localStorage.setItem(ONBOARDING_KEY, "1");
+            } catch (error) {
+                // Preference persistence is optional.
+            }
+
+            onboarding.remove();
+        };
+        page.appendChild(onboarding);
+    }
+
+    const renderLookChips = themeChips => {
         themeChips.innerHTML = "";
-        styleChips.innerHTML = "";
 
         THEMES.forEach(theme => {
             const button = document.createElement("button");
@@ -207,7 +228,7 @@ export default function Home() {
             button.textContent = theme.label;
             button.onclick = () => {
                 applyTheme(theme.id);
-                renderLookChips(themeChips, styleChips);
+                renderLookChips(themeChips);
             };
 
             dot.className = "home-look-dot";
@@ -215,21 +236,6 @@ export default function Home() {
             dot.textContent = "\u25CF";
             button.insertBefore(dot, button.firstChild);
             themeChips.appendChild(button);
-        });
-
-        UI_STYLES.forEach(style => {
-            const button = document.createElement("button");
-
-            button.type = "button";
-            button.className = "home-look-chip";
-            button.classList.toggle("active", currentUiStyle() === style.id);
-            button.textContent = style.label;
-            button.onclick = () => {
-                applyUiStyle(style.id);
-                renderLookChips(themeChips, styleChips);
-            };
-
-            styleChips.appendChild(button);
         });
     };
 
@@ -289,7 +295,6 @@ export default function Home() {
             });
 
             applyTheme(localStorage.getItem("arcdeck.theme"));
-            applyUiStyle(localStorage.getItem("arcdeck.uiStyle"));
             window.location.reload();
         } catch (error) {
             importButton.textContent = "!";
@@ -301,20 +306,31 @@ export default function Home() {
 
     nodes.hero = HeroCard();
     nodes.hero.dataset.widgetId = "hero";
+    nodes.context = ContextHub();
+    nodes.context.dataset.widgetId = "context";
 
     // small summary widgets
     const widgets = document.createElement("div");
     widgets.className = "widgets module module-stats";
-    const cpu = GlassCard({ title: "CPU", content: "<h2 id='cpu'>0%</h2>" });
-    const ram = GlassCard({ title: "RAM", content: "<h2 id='ram'>0%</h2>" });
-    const disk = GlassCard({ title: "Disk", content: "<h2 id='disk'>0%</h2>" });
-    widgets.append(cpu, ram, disk);
+    const statsHeading = document.createElement("div");
+    statsHeading.className = "module-heading stats-heading";
+    statsHeading.innerHTML = "<div><p class='eyebrow'>SYSTEM PULSE</p><h2>Performance</h2></div><span class='module-status'><span></span>Live</span>";
+    const statsGrid = document.createElement("div");
+    statsGrid.className = "stats-grid";
+    const cpu = GlassCard({ title: "CPU", content: statGaugeMarkup("cpu") });
+    const ram = GlassCard({ title: "RAM", content: statGaugeMarkup("ram") });
+    const disk = GlassCard({ title: "Disk", content: statGaugeMarkup("disk") });
+    cpu.classList.add("stat-metric", "stat-cpu");
+    ram.classList.add("stat-metric", "stat-ram");
+    disk.classList.add("stat-metric", "stat-disk");
+    statsGrid.append(cpu, ram, disk);
+    widgets.append(statsHeading, statsGrid);
     nodes.stats = widgets;
     nodes.stats.dataset.widgetId = "stats";
 
     const favoritesSection = document.createElement("section");
     favoritesSection.className = "quick-apps card glass module module-favorites";
-    favoritesSection.innerHTML = "<p class='eyebrow'>FAVORITES</p>";
+    favoritesSection.innerHTML = "<div class='module-heading'><div><p class='eyebrow'>PINNED</p><h2>Favorites</h2></div><span class='section-index'>01</span></div>";
     const favoritesGrid = document.createElement("div");
     favoritesGrid.className = "quick-apps-grid";
     favoritesSection.appendChild(favoritesGrid);
@@ -323,7 +339,7 @@ export default function Home() {
 
     const recentsSection = document.createElement("section");
     recentsSection.className = "quick-apps card glass module module-recents";
-    recentsSection.innerHTML = "<p class='eyebrow'>RECENT APPS</p>";
+    recentsSection.innerHTML = "<div class='module-heading'><div><p class='eyebrow'>HISTORY</p><h2>Recent apps</h2></div><span class='section-index'>02</span></div>";
     const recentsGrid = document.createElement("div");
     recentsGrid.className = "quick-apps-grid";
     recentsSection.appendChild(recentsGrid);
@@ -370,8 +386,8 @@ export default function Home() {
             row.className = "utility-checklist-row";
 
             done.type = "button";
-            done.className = "utility-small-button";
-            done.textContent = item.done ? "\u2611" : "\u2610";
+            done.className = "utility-small-button" + (item.done ? " is-done" : "");
+            done.innerHTML = item.done ? iconMarkup("check", { size: 14 }) : "";
             done.title = item.done ? "Mark task open" : "Mark task done";
             done.setAttribute("aria-label", item.done ? "Mark task open" : "Mark task done");
             done.onclick = () => {
@@ -385,7 +401,7 @@ export default function Home() {
 
             remove.type = "button";
             remove.className = "utility-small-button";
-            remove.textContent = "\u2715";
+            remove.innerHTML = iconMarkup("close", { size: 13 });
             remove.title = "Remove task";
             remove.setAttribute("aria-label", "Remove task");
             remove.onclick = () => {
@@ -864,15 +880,7 @@ export default function Home() {
         const themeChips = document.createElement("div");
         themeChips.className = "home-look-chips";
 
-        const styleLabel = document.createElement("p");
-        styleLabel.className = "home-look-label";
-        styleLabel.style.marginTop = "10px";
-        styleLabel.textContent = "Style";
-
-        const styleChips = document.createElement("div");
-        styleChips.className = "home-look-chips";
-
-        renderLookChips(themeChips, styleChips);
+        renderLookChips(themeChips);
 
         const profileTitle = sheetTitle("PROFILE");
         profileTitle.style.marginTop = "14px";
@@ -895,15 +903,100 @@ export default function Home() {
         profileRow.appendChild(exportButton);
         profileRow.appendChild(importButton);
 
+        const privacyTitle = sheetTitle("PRIVACY & CONTEXT");
+        privacyTitle.style.marginTop = "14px";
+
+        const privacy = document.createElement("div");
+        privacy.className = "activity-settings";
+        privacy.innerHTML = "<p class='activity-settings-note'>ArcDeck stores action names and outcomes locally. It never records typed text, URLs, window titles, clipboard data, or screen content.</p>" +
+            "<div class='activity-settings-row'><span>Activity history</span><button type='button' class='sheet-secondary' data-history>Loading</button></div>" +
+            "<div class='activity-settings-row'><span>Suggestions</span><button type='button' class='sheet-secondary' data-suggestions>Loading</button></div>" +
+            "<div class='activity-settings-row'><span>Retention</span><button type='button' class='sheet-secondary' data-retention>30 days</button></div>" +
+            "<div class='sheet-row activity-data-actions'><button type='button' class='sheet-secondary' data-activity-export>Export</button><button type='button' class='sheet-secondary' data-activity-clear>Clear history</button></div>";
+
+        let activitySettings = null;
+        const historyButton = privacy.querySelector("[data-history]");
+        const suggestionsButton = privacy.querySelector("[data-suggestions]");
+        const retentionButton = privacy.querySelector("[data-retention]");
+
+        const paintActivitySettings = () => {
+            if (!activitySettings)
+                return;
+            historyButton.textContent = activitySettings.history_enabled ? "On" : "Off";
+            suggestionsButton.textContent = activitySettings.suggestions_enabled ? "On" : "Off";
+            retentionButton.textContent = `${activitySettings.retention_days} days`;
+        };
+
+        loadActivitySettings().then(settings => {
+            if (settings && !settings.error) {
+                activitySettings = settings;
+                paintActivitySettings();
+            }
+        });
+
+        historyButton.onclick = () => {
+            if (!activitySettings)
+                return;
+            saveActivitySettings({ history_enabled: !activitySettings.history_enabled }).then(settings => {
+                if (settings && !settings.error) {
+                    activitySettings = settings;
+                    paintActivitySettings();
+                }
+            });
+        };
+
+        suggestionsButton.onclick = () => {
+            if (!activitySettings)
+                return;
+            saveActivitySettings({ suggestions_enabled: !activitySettings.suggestions_enabled }).then(settings => {
+                if (settings && !settings.error) {
+                    activitySettings = settings;
+                    paintActivitySettings();
+                }
+            });
+        };
+
+        retentionButton.onclick = () => {
+            if (!activitySettings)
+                return;
+            const values = [7, 30, 90];
+            const current = values.indexOf(activitySettings.retention_days);
+            const next = values[(current + 1) % values.length];
+            saveActivitySettings({ retention_days: next }).then(settings => {
+                if (settings && !settings.error) {
+                    activitySettings = settings;
+                    paintActivitySettings();
+                }
+            });
+        };
+
+        privacy.querySelector("[data-activity-export]").onclick = () => {
+            loadActivityEvents(1000).then(async data => {
+                const payload = JSON.stringify(data && data.events ? data.events : [], null, 2);
+                try {
+                    await navigator.clipboard.writeText(payload);
+                    window.alert("Activity history copied.");
+                } catch (error) {
+                    window.prompt("Copy your ArcDeck activity history", payload);
+                }
+            });
+        };
+
+        privacy.querySelector("[data-activity-clear]").onclick = () => {
+            if (!window.confirm("Clear all locally stored ArcDeck activity history?"))
+                return;
+            clearActivityEvents().then(() => window.alert("Activity history cleared."));
+        };
+
         children.push(layoutTitle);
         children.push(layoutRow);
         children.push(lookTitle);
         children.push(accentLabel);
         children.push(themeChips);
-        children.push(styleLabel);
-        children.push(styleChips);
         children.push(profileTitle);
         children.push(profileRow);
+        children.push(privacyTitle);
+        children.push(privacy);
         showSheet(children);
     };
 
@@ -918,13 +1011,13 @@ export default function Home() {
         }).filter(Boolean);
     };
 
-    const fillQuickGrid = (grid, apps, emptyLabel) => {
+    const fillQuickGrid = (grid, apps, emptyLabel, emptyIcon) => {
         grid.innerHTML = "";
 
         if (!apps.length) {
-            const empty = document.createElement("p");
+            const empty = document.createElement("div");
             empty.className = "quick-apps-empty";
-            empty.textContent = emptyLabel;
+            empty.innerHTML = "<span class='quick-empty-icon'>" + iconMarkup(emptyIcon, { size: 20 }) + "</span><span><strong>Nothing here yet</strong><small>" + emptyLabel + "</small></span>";
             grid.appendChild(empty);
             return;
         }
@@ -943,12 +1036,14 @@ export default function Home() {
         fillQuickGrid(
             favoritesGrid,
             byName(getFavoriteNames()).slice(0, 6),
-            "Favorite apps appear here."
+            "Favorite apps appear here.",
+            "star"
         );
         fillQuickGrid(
             recentsGrid,
             byName(getRecentNames()).slice(0, 6),
-            "Launch an app to build recents."
+            "Launch an app to build recents.",
+            "clock"
         );
     };
 
@@ -967,6 +1062,9 @@ export default function Home() {
         if (cpuEl) cpuEl.textContent = `${data.cpu}%`;
         if (ramEl) ramEl.textContent = `${data.ram}%`;
         if (diskEl && data.disk !== undefined) diskEl.textContent = `${data.disk}%`;
+        paintStatGauge("cpu", data.cpu);
+        paintStatGauge("ram", data.ram);
+        if (data.disk !== undefined) paintStatGauge("disk", data.disk);
     }
 
     on("system:update", update);
