@@ -3,7 +3,7 @@
  * cached first, so a stale index.html could pin the phone to old modules with
  * no way to clear it short of deleting site data.
  */
-const CACHE = "arcdeck-v11";
+const CACHE = "arcdeck-v29";
 
 const SHELL = [
     "./",
@@ -16,7 +16,8 @@ const SHELL = [
     "./css/layout.css",
     "./css/components.css",
     "./css/animations.css",
-    "./css/themes.css"
+    "./css/themes.css",
+    "./css/tailwind.generated.css"
 ];
 
 

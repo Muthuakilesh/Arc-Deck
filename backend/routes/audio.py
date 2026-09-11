@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from ._errors import error_response
 
 from services.volume import (
     AudioError,
@@ -25,11 +26,15 @@ def _guard(action):
     try:
         return action()
     except ValueError as error:
-        return {"error": str(error)}, 400
+        return error_response(error, status=400, code="ERR_AUDIO_VALIDATION")
     except SessionMissing as error:
-        return {"error": str(error)}, 404
+        return error_response(error, status=404, code="ERR_AUDIO_SESSION_MISSING")
     except AudioError as error:
-        return {"error": "Audio device unavailable: {0}".format(error)}, 503
+        return error_response(
+            "Audio device unavailable: {0}".format(error),
+            status=503,
+            code="ERR_AUDIO_UNAVAILABLE"
+        )
 
 
 @audio_bp.route("", methods=["GET"])

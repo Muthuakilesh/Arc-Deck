@@ -1,4 +1,4 @@
-import { loadScenes, runScene } from "../js/scenes.js";
+import { cancelScene, loadScenes, runScene } from "../js/scenes.js";
 import { off, on } from "../js/events.js";
 import { toast } from "../js/toast.js";
 
@@ -7,7 +7,7 @@ import { toast } from "../js/toast.js";
 // shows the handful worth one tap rather than the whole list.
 export default function SceneStrip() {
     const card = document.createElement("section");
-    card.className = "glass card scene-strip";
+    card.className = "glass card module module-scene-strip scene-strip";
     card.style.display = "none";
 
     const eyebrow = document.createElement("p");
@@ -36,11 +36,21 @@ export default function SceneStrip() {
             chip.textContent = (scene.icon ? scene.icon + " " : "") + scene.name;
 
             chip.onclick = () => {
-                chip.disabled = true;
+                if (chip.classList.contains("running")) {
+                    chip.textContent = "Cancelling\u2026";
+                    cancelScene(scene.id);
+                    return;
+                }
 
-                runScene(scene.id).then(result => {
-                    chip.disabled = false;
-                    toast(result && result.error ? result.error : "Ran " + scene.name);
+                chip.classList.add("running");
+                chip.textContent = "Starting\u2026";
+
+                runScene(scene.id, progress => {
+                    chip.textContent = `Step ${progress.step || 0}/${progress.steps || 0}`;
+                }).then(result => {
+                    chip.classList.remove("running");
+                    chip.textContent = (scene.icon ? scene.icon + " " : "") + scene.name;
+                    toast(result && result.error ? result.error : (result.status === "cancelled" ? "Scene cancelled" : "Ran " + scene.name));
                 });
             };
 

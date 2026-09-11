@@ -1,6 +1,7 @@
 import state from "../js/state.js";
 
 import { on } from "../js/events.js";
+import { iconMarkup } from "./icon.js";
 
 
 function label(connected) {
@@ -19,7 +20,7 @@ export default function TopBar() {
 
     bar.innerHTML = `
         <div class="brand">
-            <span class="logo">&#9672;</span>
+            <span class="logo">${iconMarkup("brand", { size: 18 })}</span>
             <span>ArcDeck</span>
         </div>
         <div class="status">

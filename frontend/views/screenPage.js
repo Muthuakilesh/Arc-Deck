@@ -1,4 +1,5 @@
 import mountChrome from "../js/chrome.js";
+import PageIntro from "../components/pageIntro.js";
 
 import { fetchFrame, tapScreen } from "../js/screen.js";
 import { toast } from "../js/toast.js";
@@ -12,31 +13,48 @@ const RATES = [
     { label: "Sharp", gap: 700, width: 720, quality: 60 }
 ];
 
+const AUTO_KEY = "arcdeck.screenAuto";
+const RATE_KEY = "arcdeck.screenRate";
+
 
 export default function ScreenPage() {
     const page = document.createElement("div");
-    page.className = "screenpeek page";
+    page.className = "screenpeek page ios-modular-page";
 
     mountChrome();
 
     let rate = RATES[1];
+    let autoMode = true;
     let running = true;
     let timer = 0;
+    let markerTimer = 0;
     let url = "";
     let started = false;
+    let latency = 0;
+    let badStreak = 0;
+    let goodStreak = 0;
+    let errorStreak = 0;
+    let lastFrameAt = 0;
 
-    const header = document.createElement("h2");
-    header.textContent = "Screen";
+    const header = PageIntro({ eyebrow: "LIVE DISPLAY", title: "Screen", icon: "screen", meta: "Remote viewport" });
 
     const picker = document.createElement("div");
-    picker.className = "pad-profiles";
+    picker.className = "pad-profiles module module-screen-controls";
+
+    const telemetry = document.createElement("p");
+    telemetry.className = "screen-status";
+    telemetry.textContent = "Mode: auto";
 
     const card = document.createElement("div");
-    card.className = "glass card screen-card";
+    card.className = "glass card module module-screen screen-card";
 
     const shot = document.createElement("img");
     shot.className = "screen-shot";
     shot.alt = "Your PC screen. Tap to click there.";
+
+    const marker = document.createElement("div");
+    marker.className = "screen-tap-marker";
+    marker.setAttribute("aria-hidden", "true");
 
     const status = document.createElement("p");
     status.className = "screen-status";
@@ -47,12 +65,121 @@ export default function ScreenPage() {
     pause.className = "chip";
     pause.textContent = "Pause";
 
+    const reconnect = document.createElement("button");
+    reconnect.type = "button";
+    reconnect.className = "chip";
+    reconnect.textContent = "Reconnect";
+
     card.appendChild(shot);
+    card.appendChild(marker);
     card.appendChild(status);
 
+    const modules = document.createElement("div");
+    modules.className = "module-grid module-grid-screen";
+
     page.appendChild(header);
-    page.appendChild(picker);
-    page.appendChild(card);
+    modules.appendChild(picker);
+    modules.appendChild(telemetry);
+    modules.appendChild(card);
+    page.appendChild(modules);
+
+    function saveMode() {
+        try {
+            localStorage.setItem(AUTO_KEY, autoMode ? "1" : "0");
+            localStorage.setItem(RATE_KEY, rate.label);
+        } catch (error) {
+            // Storage is optional for this preference.
+        }
+    }
+
+    function loadMode() {
+        try {
+            const savedAuto = localStorage.getItem(AUTO_KEY);
+            const savedRate = localStorage.getItem(RATE_KEY);
+
+            autoMode = savedAuto !== "0";
+
+            if (!autoMode && savedRate) {
+                const found = RATES.find(entry => entry.label === savedRate);
+
+                if (found)
+                    rate = found;
+            }
+        } catch (error) {
+            autoMode = true;
+        }
+    }
+
+    function setRate(next) {
+        rate = next;
+        saveMode();
+        updatePicker();
+    }
+
+    function setAuto(next) {
+        autoMode = next;
+        badStreak = 0;
+        goodStreak = 0;
+        errorStreak = 0;
+        saveMode();
+        updatePicker();
+    }
+
+    function rateIndex() {
+        return RATES.indexOf(rate);
+    }
+
+    function updatePicker() {
+        picker.querySelectorAll("[data-rate]").forEach(button => {
+            button.classList.toggle("active", button.dataset.rate === rate.label && !autoMode);
+        });
+
+        const auto = picker.querySelector("[data-auto]");
+
+        if (auto)
+            auto.classList.toggle("active", autoMode);
+    }
+
+    function updateTelemetry(extra) {
+        const mode = autoMode ? "Auto" : "Manual";
+        const lag = latency ? Math.round(latency) + "ms" : "--";
+
+        const age = lastFrameAt ? Math.max(0, Math.round((Date.now() - lastFrameAt) / 1000)) + "s old" : "No frame";
+        telemetry.textContent = (running ? "LIVE" : "PAUSED") + " \u00b7 " + mode + " \u00b7 " + rate.label + " \u00b7 " + lag + " \u00b7 " + age + (extra ? " \u00b7 " + extra : "");
+    }
+
+    function tuneByLatency() {
+        if (!autoMode)
+            return;
+
+        const index = rateIndex();
+
+        if (latency > 1500) {
+            badStreak += 1;
+            goodStreak = 0;
+        } else if (latency < 700) {
+            goodStreak += 1;
+            badStreak = 0;
+        } else {
+            badStreak = 0;
+            goodStreak = 0;
+        }
+
+        if (badStreak >= 2 && index > 0) {
+            setRate(RATES[index - 1]);
+            badStreak = 0;
+            goodStreak = 0;
+            updateTelemetry("auto tuned down");
+            return;
+        }
+
+        if (goodStreak >= 3 && index < RATES.length - 1) {
+            setRate(RATES[index + 1]);
+            badStreak = 0;
+            goodStreak = 0;
+            updateTelemetry("auto tuned up");
+        }
+    }
 
     function stop() {
         running = false;
@@ -61,6 +188,24 @@ export default function ScreenPage() {
             window.clearTimeout(timer);
             timer = 0;
         }
+
+        if (markerTimer) {
+            window.clearTimeout(markerTimer);
+            markerTimer = 0;
+        }
+    }
+
+    function showMarker(x, y) {
+        marker.style.left = (x * 100) + "%";
+        marker.style.top = (y * 100) + "%";
+        marker.classList.add("show");
+
+        if (markerTimer)
+            window.clearTimeout(markerTimer);
+
+        markerTimer = window.setTimeout(() => {
+            marker.classList.remove("show");
+        }, 360);
     }
 
     function schedule() {
@@ -81,6 +226,8 @@ export default function ScreenPage() {
 
         started = true;
 
+        const startedAt = performance.now();
+
         fetchFrame(rate.width, rate.quality).then(blob => {
             const next = window.URL.createObjectURL(blob);
 
@@ -89,10 +236,27 @@ export default function ScreenPage() {
 
             url = next;
             shot.src = next;
-            status.textContent = rate.label + " \u00b7 tap the picture to click there";
+            lastFrameAt = Date.now();
+            const elapsed = performance.now() - startedAt;
+
+            latency = latency ? (latency * 0.7 + elapsed * 0.3) : elapsed;
+            errorStreak = 0;
+            tuneByLatency();
+
+            status.textContent = "Live \u00b7 " + rate.label + " \u00b7 tap the picture to click there";
+            updateTelemetry();
             schedule();
         }).catch(error => {
             status.textContent = String(error.message || error);
+            updateTelemetry("connection error");
+            errorStreak += 1;
+
+            if (autoMode && errorStreak >= 2 && rateIndex() > 0) {
+                setRate(RATES[rateIndex() - 1]);
+                errorStreak = 0;
+                updateTelemetry("auto fallback");
+            }
+
             schedule();
         });
     }
@@ -106,30 +270,42 @@ export default function ScreenPage() {
         const x = (event.clientX - rect.left) / rect.width;
         const y = (event.clientY - rect.top) / rect.height;
 
+        showMarker(x, y);
+        status.textContent = "Tap sent: "
+            + Math.round(x * 100)
+            + "%, "
+            + Math.round(y * 100)
+            + "%";
+
         tapScreen(x, y).then(result => {
             if (result && result.error)
                 toast(result.error);
         });
     };
 
+    const auto = document.createElement("button");
+    auto.type = "button";
+    auto.className = "chip";
+    auto.dataset.auto = "1";
+    auto.textContent = "Auto";
+    auto.onclick = () => {
+        setAuto(true);
+        updateTelemetry();
+    };
+    picker.appendChild(auto);
+
     RATES.forEach(entry => {
         const button = document.createElement("button");
 
         button.type = "button";
         button.className = "chip";
+        button.dataset.rate = entry.label;
         button.textContent = entry.label;
 
-        if (entry === rate)
-            button.classList.add("active");
-
         button.onclick = () => {
-            rate = entry;
-
-            picker.querySelectorAll(".chip").forEach(chip => {
-                chip.classList.remove("active");
-            });
-
-            button.classList.add("active");
+            setAuto(false);
+            setRate(entry);
+            updateTelemetry();
         };
 
         picker.appendChild(button);
@@ -140,6 +316,7 @@ export default function ScreenPage() {
             stop();
             pause.textContent = "Resume";
             status.textContent = "Paused";
+            updateTelemetry("paused");
         } else {
             running = true;
             pause.textContent = "Pause";
@@ -148,6 +325,24 @@ export default function ScreenPage() {
     };
 
     picker.appendChild(pause);
+    reconnect.onclick = () => {
+        stop();
+        running = true;
+        started = false;
+        badStreak = 0;
+        goodStreak = 0;
+        errorStreak = 0;
+        latency = 0;
+        pause.textContent = "Pause";
+        status.textContent = "Reconnecting\u2026";
+        updateTelemetry("reconnecting");
+        tick();
+    };
+    picker.appendChild(reconnect);
+
+    loadMode();
+    updatePicker();
+    updateTelemetry();
 
     tick();
 

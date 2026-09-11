@@ -18,16 +18,16 @@ if (Get-Command pwsh -ErrorAction SilentlyContinue) {
 
 function Start-Backend {
     $backendDir = Join-Path $root "backend"
-    $cmd = "cd `"$backendDir`"; python -u app.py"
-    Write-Host "Launching backend using $shellExe in: $backendDir"
-    Start-Process -FilePath $shellExe -ArgumentList '-NoExit','-Command',$cmd
+    $pythonExe = (Get-Command python -ErrorAction Stop).Source
+    Write-Host "Launching backend using $pythonExe in: $backendDir"
+    Start-Process -FilePath $pythonExe -ArgumentList '-u','app.py' -WorkingDirectory $backendDir
 }
 
 function Start-Static {
     $frontendDir = Join-Path $root "frontend"
-    $cmd = "cd `"$frontendDir`"; python -m http.server 8000"
-    Write-Host "Launching static server using $shellExe in: $frontendDir"
-    Start-Process -FilePath $shellExe -ArgumentList '-NoExit','-Command',$cmd
+    $pythonExe = (Get-Command python -ErrorAction Stop).Source
+    Write-Host "Launching static server using $pythonExe in: $frontendDir"
+    Start-Process -FilePath $pythonExe -ArgumentList '-m','http.server','8000' -WorkingDirectory $frontendDir
 }
 
 Write-Host "Starting ArcDeck backend..."

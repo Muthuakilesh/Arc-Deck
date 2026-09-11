@@ -3,10 +3,12 @@ import { sendPad } from "./websocket.js";
 
 
 const PROFILE_KEY = "arcdeck.pad.profile";
+const CUSTOM_KEY = "arcdeck.pad.customProfiles";
+const ALLOWED_KEYS = /^[a-z0-9]$|^(up|down|left|right|space|enter|tab|esc|backspace|shift|shiftright|ctrl|ctrlright|alt|altright|f([1-9]|1[0-2]))$/;
 
 // A stick and six buttons is what fits on a 5s and covers most PC games. The
 // keys are whatever the game is bound to, so the profile is the mapping.
-export const PROFILES = [
+const DEFAULT_PROFILES = [
     {
         id: "wasd",
         label: "WASD",
@@ -47,6 +49,58 @@ export const PROFILES = [
         ]
     }
 ];
+
+
+function loadCustomProfiles() {
+    try {
+        const values = JSON.parse(window.localStorage.getItem(CUSTOM_KEY) || "[]");
+        return Array.isArray(values) ? values.filter(profile => profile && profile.id && profile.stick && Array.isArray(profile.buttons)) : [];
+    } catch (error) {
+        return [];
+    }
+}
+
+
+export let PROFILES = DEFAULT_PROFILES.concat(loadCustomProfiles());
+
+
+export function saveCustomProfile(profile) {
+    const buttons = (profile.buttons || []).slice(0, 6).map(button => ({
+        key: String(button.key || "").trim().toLowerCase(),
+        label: String(button.label || button.key || "Key").trim().slice(0, 12)
+    }));
+    const stick = {};
+    ["up", "down", "left", "right"].forEach(direction => {
+        stick[direction] = String(profile.stick && profile.stick[direction] || "").trim().toLowerCase();
+    });
+    const allKeys = buttons.map(button => button.key).concat(Object.values(stick));
+    if (buttons.length !== 6 || allKeys.some(key => !ALLOWED_KEYS.test(key)))
+        return { error: "Use six allowed keyboard keys and four valid stick directions." };
+
+    const saved = {
+        id: String(profile.id || "custom-" + Date.now().toString(36)),
+        label: String(profile.label || "Custom").trim().slice(0, 18),
+        stick: stick,
+        buttons: buttons,
+        deadzone: Math.max(6, Math.min(40, Number(profile.deadzone) || 14)),
+        app: String(profile.app || "").trim()
+    };
+    const custom = loadCustomProfiles().filter(item => item.id !== saved.id);
+    custom.push(saved);
+    try {
+        window.localStorage.setItem(CUSTOM_KEY, JSON.stringify(custom));
+    } catch (error) {
+        return { error: "Could not save the profile." };
+    }
+    PROFILES = DEFAULT_PROFILES.concat(custom);
+    return saved;
+}
+
+
+export function profileForApp(appName) {
+    const wanted = String(appName || "").toLowerCase();
+    return PROFILES.find(profile => profile.app && profile.app.toLowerCase() === wanted) || null;
+}
 
 
 export function profileById(id) {

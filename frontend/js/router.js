@@ -18,11 +18,14 @@ function navigate(name)
 {
 	const container = document.getElementById("app-view");
 	const page = routes[name];
+	const shell = document.getElementById("arcdeck");
 
 	if (!page || !container)
 		return;
 
 	currentPage = name;
+	if (shell)
+		shell.dataset.page = name;
 	container.innerHTML = "";
 
 	const element = page();

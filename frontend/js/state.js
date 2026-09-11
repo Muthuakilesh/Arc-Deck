@@ -57,6 +57,20 @@ sessions:[],
 
 scenes:[]
 
+,sceneRun:null
+
+,favorites:[]
+
+,recents:[]
+
+,clipboard:
+{
+	enabled:false,
+	available:false,
+	text:"",
+	version:0
+}
+
 
 
 };

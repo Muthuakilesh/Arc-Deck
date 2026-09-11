@@ -8,17 +8,17 @@ import openAppSheet from "./appSheet.js";
 // card hides itself while nothing is running so the home screen stays short.
 export default function RunningStrip() {
     const card = document.createElement("div");
-    card.className = "glass card running-strip";
+    card.className = "glass card module module-running running-strip";
     card.style.display = "none";
 
-    const title = document.createElement("p");
-    title.className = "eyebrow";
-    title.textContent = "RUNNING NOW";
+    const heading = document.createElement("div");
+    heading.className = "module-heading";
+    heading.innerHTML = "<div><p class='eyebrow'>ACTIVE SESSION</p><h2>Running now</h2></div><span class='running-indicator'><span></span>Live</span>";
 
     const row = document.createElement("div");
     row.className = "chip-row";
 
-    card.appendChild(title);
+    card.appendChild(heading);
     card.appendChild(row);
 
     function render(apps) {
@@ -31,10 +31,17 @@ export default function RunningStrip() {
 
         running.forEach(app => {
             const chip = document.createElement("button");
+            const appIcon = document.createElement("span");
+            const appName = document.createElement("span");
+            const statusDot = document.createElement("span");
 
             chip.type = "button";
             chip.className = "chip";
-            chip.textContent = (app.icon ? app.icon + " " : "") + app.name;
+            appIcon.className = "running-app-icon";
+            appIcon.textContent = app.icon || "\u25C8";
+            appName.textContent = app.name;
+            statusDot.className = "running-app-dot";
+            chip.append(appIcon, appName, statusDot);
             chip.onclick = () => openAppSheet(app);
 
             row.appendChild(chip);

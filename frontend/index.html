@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- viewport-fit=cover + the safe-area vars keep the dock off the home indicator. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>ArcDeck</title>
 
@@ -23,6 +23,9 @@
     <link rel="stylesheet" href="./css/components.css">
     <link rel="stylesheet" href="./css/animations.css">
     <link rel="stylesheet" href="./css/themes.css">
+    <!-- Loaded last so its @layer components rules win the cascade over the
+         plain CSS above without having to touch every component's markup. -->
+    <link rel="stylesheet" href="./css/tailwind.generated.css">
 </head>
 
 <body>
@@ -44,7 +47,7 @@
 
     <!-- Served from the PC: the phone often has no internet on the LAN the deck runs on. -->
     <script src="./vendor/socket.io.min.js"></script>
-    <script type="module" src="./js/main.js?v=11"></script>
+    <script type="module" src="./js/main.js?v=28"></script>
 </body>
 
 </html>

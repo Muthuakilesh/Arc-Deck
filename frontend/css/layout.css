@@ -6,8 +6,15 @@
     position: relative;
     width: 100%;
     height: 100%;
+    min-height: 100vh;
     overflow: hidden;
     background: var(--background);
+}
+
+@supports (height: 100dvh) {
+    #arcdeck {
+        min-height: 100dvh;
+    }
 }
 
 #wallpaper-layer,
@@ -20,6 +27,52 @@
     left: 0;
 }
 
+#arcdeck[data-page="apps"] #gradient-layer {
+    background: radial-gradient(circle at 90% -8%, rgba(43, 213, 255, .12), transparent 34%), linear-gradient(165deg, #0c121d, #070a11 62%);
+}
+
+#arcdeck[data-page="apps"] { --dock-accent: #42dcff; }
+
+#arcdeck[data-page="media"] #gradient-layer {
+    background: radial-gradient(circle at 18% -10%, rgba(255, 72, 136, .17), transparent 38%), radial-gradient(circle at 92% 16%, rgba(255, 171, 64, .1), transparent 30%), linear-gradient(165deg, #160d19, #08090f 58%);
+}
+
+#arcdeck[data-page="media"] { --dock-accent: #ff5b8d; }
+
+#arcdeck[data-page="control"] #gradient-layer {
+    background: radial-gradient(circle at 85% 0%, rgba(38, 221, 203, .12), transparent 34%), linear-gradient(160deg, #091718, #070b10 58%);
+}
+
+#arcdeck[data-page="control"] { --dock-accent: #43e0c8; }
+
+#arcdeck[data-page="scenes"] #gradient-layer {
+    background: radial-gradient(circle at 12% 0%, rgba(132, 100, 255, .16), transparent 36%), linear-gradient(165deg, #110e1d, #080a11 60%);
+}
+
+#arcdeck[data-page="scenes"] { --dock-accent: #a48aff; }
+
+#arcdeck[data-page="gamepad"] #gradient-layer {
+    background: radial-gradient(circle at 50% -8%, rgba(255, 70, 96, .16), transparent 40%), linear-gradient(180deg, #160c13, #08090d 62%);
+}
+
+#arcdeck[data-page="gamepad"] { --dock-accent: #ff667d; }
+
+#arcdeck[data-page="screen"] #gradient-layer {
+    background: radial-gradient(circle at 50% 0%, rgba(55, 143, 255, .15), transparent 42%), linear-gradient(175deg, #09131f, #05080d 64%);
+}
+
+#arcdeck[data-page="screen"] { --dock-accent: #5ca8ff; }
+
+#arcdeck[data-page="stats"] #gradient-layer {
+    background: radial-gradient(circle at 92% 0%, rgba(50, 235, 164, .12), transparent 34%), linear-gradient(165deg, #091510, #060a0b 60%);
+}
+
+#arcdeck[data-page="stats"] { --dock-accent: #55e6a5; }
+
+#arcdeck[data-page="clock"] #gradient-layer {
+    background: radial-gradient(circle at 50% 18%, rgba(79, 116, 255, .16), transparent 46%), linear-gradient(180deg, #0b1020, #05070d 68%);
+}
+
 #wallpaper-layer {
     background-size: cover;
     background-position: center;
@@ -28,45 +81,80 @@
 
 #gradient-layer {
     z-index: 1;
-    background: radial-gradient(circle at 8% 0%, rgba(61, 220, 255, .20), transparent 42%),
-        radial-gradient(circle at 100% 12%, rgba(126, 92, 255, .18), transparent 40%),
-        linear-gradient(170deg, #0b1225 0%, #070b18 52%, #04060d 100%);
+    background:
+        radial-gradient(circle at 8% -10%, rgba(39, 211, 255, .28), transparent 42%),
+        radial-gradient(circle at 94% 16%, rgba(143, 91, 255, .24), transparent 34%),
+        radial-gradient(circle at 48% 108%, rgba(44, 101, 220, .2), transparent 48%),
+        linear-gradient(165deg, #10182d 0%, #080e1c 46%, #050811 100%);
+}
+
+#gradient-layer::before {
+    content: "";
+    position: absolute;
+    top: 12%;
+    right: -22%;
+    width: 76%;
+    height: 40%;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0));
+    opacity: .42;
+    pointer-events: none;
+}
+
+#gradient-layer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px) 0 0 / 100% 44px;
+    opacity: .16;
+    pointer-events: none;
 }
 
 #topbar,
 #dock {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: var(--gutter);
+    right: var(--gutter);
     z-index: 20;
 }
 
 #topbar {
-    top: 0;
+    top: 6px;
     height: calc(var(--topbar-height) + var(--safe-top));
     padding-top: var(--safe-top);
 }
 
 #dock {
-    bottom: 0;
-    height: calc(var(--dock-height) + var(--safe-bottom));
-    padding-bottom: var(--safe-bottom);
+    bottom: calc(var(--safe-bottom) + 14px);
+    left: 50%;
+    right: auto;
+    width: min(620px, calc(100% - (var(--gutter) * 2)));
+    height: var(--dock-height);
+    padding-bottom: 0;
+    transform: translateX(-50%);
 }
 
 #app-view {
     position: absolute;
-    top: calc(var(--topbar-height) + var(--safe-top));
+    top: calc(var(--topbar-height) + var(--safe-top) + 16px);
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 10;
 
     /* The dock floats over the page, so the last card needs room to clear it. */
-    padding: 14px var(--gutter) calc(var(--dock-height) + var(--safe-bottom) + 20px);
+    padding: 14px var(--gutter) calc(var(--dock-height) + var(--safe-bottom) + 32px);
 
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+.page {
+    max-width: 980px;
+    margin: 0 auto;
 }
 
 /* Every page is a simple vertical stack; no flexbox gap, which Safari 12 lacks. */
@@ -75,12 +163,14 @@
 }
 
 .page > h2 {
-    font-size: 1.35rem;
-    letter-spacing: .01em;
+    font-size: 1.42rem;
+    font-weight: 620;
+    letter-spacing: .006em;
+    line-height: 1.12;
 }
 
 .page > h2 + * {
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 /*
@@ -103,6 +193,23 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+@media (max-width: 359px) {
+    #app-view {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .widgets,
+    .launcher-grid {
+        grid-gap: 8px;
+        gap: 8px;
+    }
+
+    .launcher-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (min-width: 600px) {
     .widgets {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -110,6 +217,17 @@
 
     .launcher-grid {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+@media (min-width: 900px) {
+    #app-view {
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+
+    .launcher-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     }
 }
 

@@ -2,7 +2,6 @@ import router from "./router.js";
 
 import Home from "../views/home.js";
 import AppsPage from "../views/appsPage.js";
-import GamesPage from "../views/gamesPage.js";
 import GamepadPage from "../views/gamepadPage.js";
 import ScreenPage from "../views/screenPage.js";
 import MediaPage from "../views/mediaPage.js";
@@ -19,7 +18,6 @@ import initShell from "./shell.js";
 
 router.register("home", Home);
 router.register("apps", AppsPage);
-router.register("games", GamesPage);
 router.register("gamepad", GamepadPage);
 router.register("screen", ScreenPage);
 router.register("media", MediaPage);

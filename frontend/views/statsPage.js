@@ -1,6 +1,7 @@
 import mountChrome from "../js/chrome.js";
-import GlassCard from "../components/glassCard.js";
+import GlassCard, { paintStatGauge, statGaugeMarkup } from "../components/glassCard.js";
 import { on } from "../js/events.js";
+import PageIntro from "../components/pageIntro.js";
 
 export default function StatsPage() {
     const page = document.createElement('div');
@@ -9,19 +10,25 @@ export default function StatsPage() {
     mountChrome();
 
 
-    const header = document.createElement('h2');
-    header.textContent = 'System Stats';
+    const header = PageIntro({ eyebrow: 'SYSTEM HEALTH', title: 'Telemetry', icon: 'stats', meta: 'Live performance' });
     page.appendChild(header);
 
     const grid = document.createElement('div');
     grid.className = 'widgets';
 
-    const cpu = GlassCard({ title: 'CPU', content: "<h2 id='cpu'>0%</h2>" });
-    const ram = GlassCard({ title: 'RAM', content: "<h2 id='ram'>0%</h2>" });
-    const disk = GlassCard({ title: 'Disk', content: "<h2 id='disk'>0%</h2>" });
+    const cpu = GlassCard({ title: 'CPU', content: statGaugeMarkup('cpu') });
+    const ram = GlassCard({ title: 'RAM', content: statGaugeMarkup('ram') });
+    const disk = GlassCard({ title: 'Disk', content: statGaugeMarkup('disk') });
     const ip = GlassCard({ title: 'IP', content: "<div id='ip'>—</div>" });
     const uptime = GlassCard({ title: 'Uptime (s)', content: "<div id='uptime'>0</div>" });
     const gpu = GlassCard({ title: 'GPU', content: "<div id='gpu'>No GPU data</div>" });
+
+    cpu.classList.add('stat-primary', 'stat-cpu');
+    ram.classList.add('stat-primary', 'stat-ram');
+    disk.classList.add('stat-primary', 'stat-disk');
+    ip.classList.add('stat-detail');
+    uptime.classList.add('stat-detail');
+    gpu.classList.add('stat-detail', 'stat-gpu');
 
     grid.append(cpu, ram, disk, ip, uptime, gpu);
     page.appendChild(grid);
@@ -36,6 +43,9 @@ export default function StatsPage() {
         if (cpuEl) cpuEl.textContent = `${data.cpu}%`;
         if (ramEl) ramEl.textContent = `${data.ram}%`;
         if (diskEl && data.disk !== undefined) diskEl.textContent = `${data.disk}%`;
+        paintStatGauge('cpu', data.cpu);
+        paintStatGauge('ram', data.ram);
+        if (data.disk !== undefined) paintStatGauge('disk', data.disk);
         if (ipEl) ipEl.textContent = data.ip || '—';
         if (uptimeEl && data.uptime !== undefined) uptimeEl.textContent = data.uptime;
         if (gpuEl) {

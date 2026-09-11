@@ -1,4 +1,5 @@
 import { loadSessions, setSessionMute, setSessionVolume } from "../js/mixer.js";
+import { iconMarkup } from "./icon.js";
 
 
 // Sessions are not broadcast: they change only when an app starts or stops
@@ -41,7 +42,7 @@ function row(session) {
 
     function paint(level, muted) {
         value.textContent = level + "%";
-        mute.innerHTML = muted ? "&#128263;" : "&#128266;";
+        mute.innerHTML = iconMarkup(muted ? "volume-mute" : "volume-up", { size: 16 });
         mute.classList.toggle("is-muted", muted);
         // backgroundImage, not the shorthand, which would drop background-size.
         slider.style.backgroundImage =
@@ -85,20 +86,26 @@ function row(session) {
 // Per-app volume: turn the game down without turning the call down.
 export default function Mixer() {
     const card = document.createElement("section");
-    card.className = "glass card mixer";
+    card.className = "glass card module module-mixer mixer";
 
     const eyebrow = document.createElement("p");
     eyebrow.className = "eyebrow";
     eyebrow.textContent = "APP MIXER";
 
+    const skeleton = document.createElement("div");
+    skeleton.className = "mix-skeleton";
+    skeleton.innerHTML = "<span class='skeleton mix-skeleton-row'></span><span class='skeleton mix-skeleton-row'></span>";
+
     const empty = document.createElement("p");
-    empty.className = "mix-empty";
-    empty.textContent = "No app is playing audio.";
+    empty.className = "mix-empty empty-state";
+    empty.textContent = "No app is playing audio right now.";
+    empty.style.display = "none";
 
     const list = document.createElement("div");
     list.className = "mix-list";
 
     card.appendChild(eyebrow);
+    card.appendChild(skeleton);
     card.appendChild(empty);
     card.appendChild(list);
 
@@ -106,6 +113,9 @@ export default function Mixer() {
 
     function render(sessions) {
         const seen = {};
+
+        if (skeleton.parentNode)
+            skeleton.remove();
 
         empty.style.display = sessions.length ? "none" : "block";
 

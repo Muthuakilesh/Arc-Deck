@@ -31,6 +31,7 @@ MAX_STEP_DELAY = 2.0
 
 
 DATA_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "apps.json")
+CUSTOM_DATA_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "custom_apps.json")
 
 
 def _load_data_file():
@@ -44,6 +45,28 @@ def _load_data_file():
     return None
 
 
+def _load_custom_file():
+    try:
+        path = os.path.abspath(CUSTOM_DATA_FILE)
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data if isinstance(data, list) else []
+    except (OSError, ValueError):
+        pass
+    return []
+
+
+def _write_custom_file(entries):
+    path = os.path.abspath(CUSTOM_DATA_FILE)
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+    temporary = path + ".tmp"
+    with open(temporary, "w", encoding="utf-8") as handle:
+        json.dump(entries, handle, indent=2, ensure_ascii=False)
+    os.replace(temporary, path)
+
+
 def _defaults():
     return [
         {"name": name, "path": path, "category": "apps"}
@@ -53,8 +76,60 @@ def _defaults():
 
 def _entries():
     data = _load_data_file()
+    base = data if isinstance(data, list) else _defaults()
+    custom = _load_custom_file()
+    merged = {str(item.get("name", "")).strip().lower(): item for item in base if item.get("name")}
+    for item in custom:
+        name = str(item.get("name", "")).strip().lower()
+        if name:
+            merged[name] = item
+    return list(merged.values())
 
-    return data if isinstance(data, list) else _defaults()
+
+def save_custom_app(data):
+    if not isinstance(data, dict):
+        return {"error": "Game details are required"}, 400
+    name = str(data.get("name") or "").strip()
+    path = str(data.get("path") or "").strip()
+    if not name or len(name) > 80:
+        return {"error": "Game name must be 1-80 characters"}, 400
+    existing = find_app(name)
+    if not path and existing:
+        path = str(existing.get("path") or "")
+    if not path or len(path) > 500:
+        return {"error": "Game executable path is required"}, 400
+    image = str(data.get("image") or "").strip()
+    if image and len(image) > 1000 or image and not (image.startswith("https://") or image.startswith("http://") or image.startswith("/")):
+        return {"error": "Image must be an http(s) URL or local frontend path"}, 400
+    custom = [item for item in _load_custom_file() if str(item.get("name", "")).lower() != name.lower()]
+    entry = {
+        "name": name,
+        "path": path,
+        "process": str(data.get("process") or (existing or {}).get("process") or "").strip(),
+        "icon": str(data.get("icon") or (existing or {}).get("icon") or "🎮")[:8],
+        "image": image,
+        "category": "games",
+        "actions": (existing or {}).get("actions", []) if isinstance((existing or {}).get("actions", []), list) else []
+    }
+    custom.append(entry)
+    try:
+        _write_custom_file(custom)
+    except OSError as error:
+        return {"error": "Could not save game: " + str(error)}, 500
+    return _describe(entry)
+
+
+def delete_custom_app(name):
+    wanted = str(name or "").strip().lower()
+    custom = _load_custom_file()
+    kept = [item for item in custom if str(item.get("name", "")).strip().lower() != wanted]
+    if len(kept) == len(custom):
+        return {"error": "Custom game not found"}, 404
+    try:
+        _write_custom_file(kept)
+    except OSError as error:
+        return {"error": "Could not delete game: " + str(error)}, 500
+    return {"deleted": name}
 
 
 def find_app(name):
@@ -77,6 +152,7 @@ def _describe(item):
         "name": item.get("name"),
         "path": item.get("path"),
         "icon": item.get("icon"),
+        "image": item.get("image", ""),
         "category": item.get("category", "apps"),
         "process": process_name_for(item),
         "running": is_running(item),
@@ -132,6 +208,19 @@ def command_key(command):
 
 def declares(item, command):
     return command_key(command) in _declared_commands(item)
+
+
+def action_id(item, command):
+    key = command_key(command)
+
+    if key in BUILTIN_COMMANDS:
+        return key
+
+    for index, action in enumerate(item.get("actions") or []):
+        if isinstance(action, dict) and command_key(action.get("command")) == key:
+            return "declared-{0}".format(index + 1)
+
+    return "declared"
 
 
 def _run_step(item, command):

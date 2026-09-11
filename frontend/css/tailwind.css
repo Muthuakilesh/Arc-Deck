@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* Tailwind scans these for class names; the app has no src/ folder convention. */
+@source "../**/*.html";
+@source "../**/*.js";
+
+/*
+ * Retrofits the modern look onto the app's existing class names instead of
+ * rewriting every component's markup — loaded last in index.html so these
+ * beat the plain CSS in components.css for the same selectors.
+ */
+@layer components {
+    .glass {
+        @apply backdrop-blur-xl;
+    }
+
+    .card {
+        @apply rounded-3xl border border-white/10 bg-white/[0.05] shadow-[0_20px_45px_-15px_rgba(0,0,0,0.55)];
+    }
+
+    .eyebrow {
+        @apply text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-white/40;
+    }
+
+    .control-button,
+    .keyboard-actions button,
+    .power-actions button,
+    .quick-keys button,
+    .focus-controls button,
+    .buttons button,
+    .sheet-item {
+        @apply rounded-2xl border border-white/10 bg-white/[0.07] font-semibold text-white/90 transition-transform duration-150 active:scale-[0.97] active:bg-white/[0.14];
+    }
+
+    .primary-control {
+        @apply rounded-2xl border-transparent font-bold shadow-[0_10px_20px_-6px_var(--accent)];
+        background-color: var(--accent);
+        color: var(--accent-ink);
+    }
+
+    .chip {
+        @apply rounded-full border border-white/10 bg-white/[0.07] font-medium text-white transition-transform duration-150 active:scale-[0.96] active:bg-white/[0.14];
+    }
+
+    .filter-chip {
+        @apply rounded-full border border-white/10 bg-white/[0.07] font-semibold text-white/70 transition-transform duration-150 active:scale-[0.95];
+    }
+
+    .filter-chip.active {
+        @apply border-transparent;
+        background-color: var(--accent);
+        color: var(--accent-ink);
+    }
+
+    .topbar {
+        @apply rounded-[26px] border border-white/10 bg-black/40 shadow-[0_12px_24px_rgba(2,7,18,0.32)];
+    }
+
+    .dock {
+        @apply rounded-full border border-white/10 bg-black/50 shadow-[0_14px_30px_rgba(0,0,0,0.42)];
+    }
+
+    .mute-button,
+    .mix-mute,
+    .scene-edit,
+    .step-remove,
+    .icon-only-button {
+        @apply rounded-full text-white/80 transition-transform duration-150 active:scale-90;
+    }
+
+    .launcher-card {
+        @apply rounded-3xl border border-white/10 bg-white/[0.05] transition-transform duration-150 active:scale-[0.97];
+    }
+
+    .hero {
+        @apply rounded-3xl bg-gradient-to-br from-white/10 to-transparent;
+        background-image: linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, transparent), color-mix(in srgb, #7e5cff 20%, transparent));
+    }
+
+    .onboarding-banner,
+    .focus-card {
+        @apply rounded-3xl border;
+        border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+
+    .sheet {
+        @apply rounded-t-[28px] border border-white/10 bg-black/80 shadow-[0_-14px_40px_rgba(0,0,0,0.5)];
+    }
+}
