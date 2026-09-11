@@ -18,9 +18,23 @@ if (Get-Command pwsh -ErrorAction SilentlyContinue) {
 
 function Start-Backend {
     $backendDir = Join-Path $root "backend"
-    $pythonExe = (Get-Command python -ErrorAction Stop).Source
+    $venvPython = Join-Path $root ".venv\Scripts\python.exe"
+    if (Test-Path $venvPython) {
+        & $venvPython -c "import flask, flask_socketio" 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            $pythonExe = $venvPython
+        } else {
+            Write-Warning "The project virtual environment is missing backend dependencies; using the system Python. Run: .venv\Scripts\python.exe -m pip install -r backend\requirements.txt"
+            $pythonExe = (Get-Command python -ErrorAction Stop).Source
+        }
+    } else {
+        $pythonExe = (Get-Command python -ErrorAction Stop).Source
+    }
+
     Write-Host "Launching backend using $pythonExe in: $backendDir"
-    Start-Process -FilePath $pythonExe -ArgumentList '-u','app.py' -WorkingDirectory $backendDir
+    $logPath = Join-Path $backendDir "startup.log"
+    $command = "Set-Location -LiteralPath '$backendDir'; & '$pythonExe' -u app.py 2>&1 | Tee-Object -FilePath '$logPath'; Read-Host 'Backend stopped. Press Enter to close'"
+    Start-Process -FilePath $shellExe -ArgumentList '-NoExit','-NoProfile','-Command',$command -WorkingDirectory $backendDir
 }
 
 function Start-Static {

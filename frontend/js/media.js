@@ -13,6 +13,11 @@ export async function loadMedia() {
 }
 
 
-export async function mediaAction(action) {
-    return post("/media/action", { action: action });
+export async function mediaAction(action, position) {
+    const payload = { action: action };
+
+    if (position !== undefined)
+        payload.position = position;
+
+    return post("/media/action", payload);
 }

@@ -9,12 +9,15 @@ import ScenesPage from "../views/scenesPage.js";
 import ControlPage from "../views/controlPage.js";
 import StatsPage from "../views/statsPage.js";
 import ClockPage from "../views/clockPage.js";
+import NotesPage from "../views/notesPage.js";
+import QuickSettingsPage from "../views/quickSettingsPage.js";
 
 import { initTheme } from "./theme.js";
 import { startClock } from "./clock.js";
 import { connectSocket } from "./websocket.js";
 import { ensureAuthenticated } from "./auth.js";
 import initShell from "./shell.js";
+import { initWallpaper } from "./wallpaper.js";
 
 router.register("home", Home);
 router.register("apps", AppsPage);
@@ -25,6 +28,8 @@ router.register("scenes", ScenesPage);
 router.register("control", ControlPage);
 router.register("stats", StatsPage);
 router.register("clock", ClockPage);
+router.register("notes", NotesPage);
+router.register("quick-settings", QuickSettingsPage);
 
 function dismissSplash() {
     const splash = document.getElementById("splash");
@@ -46,6 +51,7 @@ function registerWorker() {
 
 async function start() {
     initTheme();
+    initWallpaper();
 
     // The PIN card renders into this screen, so the splash goes first.
     dismissSplash();

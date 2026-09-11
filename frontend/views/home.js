@@ -5,6 +5,7 @@ import FocusCard from "../components/focusCard.js";
 import RunningStrip from "../components/runningStrip.js";
 import SceneStrip from "../components/sceneStrip.js";
 import VolumeControl from "../components/volumeControl.js";
+import AppHome from "../components/appHome.js";
 import LauncherCard from "../components/launcherCard.js";
 import ContextHub from "../components/contextHub.js";
 import { closeSheet, sheetTitle, showSheet } from "../components/sheet.js";
@@ -15,6 +16,7 @@ import { clearActivityEvents, loadActivityEvents, loadActivitySettings, saveActi
 import { off, on } from "../js/events.js";
 import { getFavoriteNames, getRecentNames, loadApps } from "../js/apps.js";
 import state from "../js/state.js";
+import { applyWallpaper, currentWallpaper, WALLPAPERS } from "../js/wallpaper.js";
 
 const LAYOUT_KEY = "arcdeck.homeLayout";
 const FREE_LAYOUT_KEY = "arcdeck.homeFreeLayout";
@@ -25,6 +27,7 @@ const STREAK_KEY = "arcdeck.utilStreak";
 const ONBOARDING_KEY = "arcdeck.onboardingSeen";
 const PROFILE_KEYS = [
     "arcdeck.theme",
+    "arcdeck.wallpaper",
     LAYOUT_KEY,
     "arcdeck.clockPresetSeconds",
     "arcdeck.clockLandscape",
@@ -33,6 +36,7 @@ const PROFILE_KEYS = [
     "arcdeck.clock24h",
     "arcdeck.clockSeconds",
     "arcdeck.clockDate",
+    "arcdeck.clockDay",
     "arcdeck.clockStandby",
     "arcdeck.clockMotion",
     "arcdeck.clockDim",
@@ -52,9 +56,7 @@ const DEFAULT_LAYOUT = [
     { id: "scenes", label: "Scenes", visible: true },
     { id: "running", label: "Running Apps", visible: true },
     { id: "volume", label: "Volume", visible: true },
-    { id: "checklist", label: "Checklist", visible: true },
-    { id: "streak", label: "Streak", visible: true },
-    { id: "notes", label: "Notes", visible: true }
+    { id: "streak", label: "Streak", visible: true }
 ];
 
 function loadJson(key, fallback) {
@@ -183,8 +185,6 @@ export default function Home() {
     let layout = loadLayout();
     let freeLayout = loadFreeLayout();
     let freePositions = loadFreePositions();
-    let checklist = loadJson(CHECKLIST_KEY, []);
-    let notes = String(loadJson(NOTES_KEY, "") || "");
     let streak = loadJson(STREAK_KEY, { count: 0, lastDate: "" });
 
     const nodes = {};
@@ -240,6 +240,7 @@ export default function Home() {
     };
 
     const widgetHost = document.createElement("div");
+    page.appendChild(AppHome());
     widgetHost.className = "home-widget-host";
     page.appendChild(widgetHost);
 
@@ -355,90 +356,6 @@ export default function Home() {
     nodes.volume = VolumeControl();
     nodes.volume.dataset.widgetId = "volume";
 
-    const checklistSection = document.createElement("section");
-    checklistSection.className = "utility-card card glass module module-utility";
-    checklistSection.innerHTML = "<p class='eyebrow'>CHECKLIST</p><div class='utility-checklist-list' data-checklist-list></div><div class='utility-checklist-add'><input type='text' maxlength='60' placeholder='Add task'><button type='button' class='control-button icon-only-button' title='Add task' aria-label='Add task'>+</button></div>";
-    const checklistList = checklistSection.querySelector("[data-checklist-list]");
-    const checklistInput = checklistSection.querySelector("input");
-    const checklistAdd = checklistSection.querySelector("button");
-
-    const saveChecklist = () => {
-        saveJson(CHECKLIST_KEY, checklist);
-    };
-
-    const renderChecklist = () => {
-        checklistList.innerHTML = "";
-
-        if (!checklist.length) {
-            const empty = document.createElement("p");
-            empty.className = "utility-empty";
-            empty.textContent = "No tasks yet.";
-            checklistList.appendChild(empty);
-            return;
-        }
-
-        checklist.forEach(item => {
-            const row = document.createElement("div");
-            const done = document.createElement("button");
-            const text = document.createElement("span");
-            const remove = document.createElement("button");
-
-            row.className = "utility-checklist-row";
-
-            done.type = "button";
-            done.className = "utility-small-button" + (item.done ? " is-done" : "");
-            done.innerHTML = item.done ? iconMarkup("check", { size: 14 }) : "";
-            done.title = item.done ? "Mark task open" : "Mark task done";
-            done.setAttribute("aria-label", item.done ? "Mark task open" : "Mark task done");
-            done.onclick = () => {
-                item.done = !item.done;
-                saveChecklist();
-                renderChecklist();
-            };
-
-            text.className = "utility-checklist-text" + (item.done ? " is-done" : "");
-            text.textContent = item.text;
-
-            remove.type = "button";
-            remove.className = "utility-small-button";
-            remove.innerHTML = iconMarkup("close", { size: 13 });
-            remove.title = "Remove task";
-            remove.setAttribute("aria-label", "Remove task");
-            remove.onclick = () => {
-                checklist = checklist.filter(entry => entry.id !== item.id);
-                saveChecklist();
-                renderChecklist();
-            };
-
-            row.appendChild(done);
-            row.appendChild(text);
-            row.appendChild(remove);
-            checklistList.appendChild(row);
-        });
-    };
-
-    const addChecklistItem = () => {
-        const text = String(checklistInput.value || "").trim();
-
-        if (!text)
-            return;
-
-        checklist.push({ id: Date.now() + Math.random(), text: text, done: false });
-        checklistInput.value = "";
-        saveChecklist();
-        renderChecklist();
-    };
-
-    checklistAdd.onclick = addChecklistItem;
-    checklistInput.onkeydown = event => {
-        if (event.key === "Enter")
-            addChecklistItem();
-    };
-
-    renderChecklist();
-    nodes.checklist = checklistSection;
-    nodes.checklist.dataset.widgetId = "checklist";
-
     const streakSection = document.createElement("section");
     streakSection.className = "utility-card card glass module module-utility";
     streakSection.innerHTML = "<p class='eyebrow'>STREAK</p><h3 data-streak-count>0 days</h3><p class='utility-streak-note' data-streak-note>Check in daily to build your streak.</p><button type='button' class='control-button icon-only-button' title='Check in today' aria-label='Check in today' data-streak-checkin>\uD83D\uDD25</button>";
@@ -485,18 +402,6 @@ export default function Home() {
     renderStreak();
     nodes.streak = streakSection;
     nodes.streak.dataset.widgetId = "streak";
-
-    const notesSection = document.createElement("section");
-    notesSection.className = "utility-card card glass module module-utility";
-    notesSection.innerHTML = "<p class='eyebrow'>NOTES</p><textarea class='utility-notes' maxlength='400' placeholder='Quick notes for your desk'></textarea>";
-    const notesArea = notesSection.querySelector("textarea");
-    notesArea.value = notes;
-    notesArea.oninput = () => {
-        notes = notesArea.value;
-        saveJson(NOTES_KEY, notes);
-    };
-    nodes.notes = notesSection;
-    nodes.notes.dataset.widgetId = "notes";
 
     const applyFreePosition = (id, node, index) => {
         const position = freePositions[id] || {
@@ -882,6 +787,35 @@ export default function Home() {
 
         renderLookChips(themeChips);
 
+        const wallpaperTitle = sheetTitle("WALLPAPER");
+        wallpaperTitle.style.marginTop = "14px";
+        const wallpaperGrid = document.createElement("div");
+        wallpaperGrid.className = "home-wallpaper-grid";
+        const wallpaper = currentWallpaper();
+        WALLPAPERS.forEach(preset => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "home-wallpaper-chip";
+            button.textContent = preset.label;
+            button.classList.toggle("active", wallpaper.preset === preset.id);
+            button.onclick = () => {
+                applyWallpaper({ preset: preset.id });
+                wallpaperGrid.querySelectorAll("button").forEach(item => item.classList.remove("active"));
+                button.classList.add("active");
+            };
+            wallpaperGrid.appendChild(button);
+        });
+
+        const wallpaperControls = document.createElement("div");
+        wallpaperControls.className = "wallpaper-controls";
+        wallpaperControls.innerHTML = "<label>Intensity <input type='range' min='0' max='100' value='" + wallpaper.intensity + "' data-wallpaper-intensity></label><label>Blur <input type='range' min='0' max='20' value='" + wallpaper.blur + "' data-wallpaper-blur></label><label>Brightness <input type='range' min='50' max='130' value='" + wallpaper.brightness + "' data-wallpaper-brightness></label><label class='wallpaper-toggle'><input type='checkbox' data-wallpaper-motion " + (wallpaper.motion !== false ? "checked" : "") + "> Motion</label><label class='wallpaper-url-label'>Image URL<input type='url' placeholder='https://...' value='" + (wallpaper.image || "").replace(/"/g, "&quot;") + "' data-wallpaper-image-url></label><div class='sheet-row wallpaper-image-actions'><button type='button' class='sheet-secondary' data-wallpaper-image>Apply image</button><button type='button' class='sheet-secondary' data-wallpaper-clear>Clear image</button></div>";
+        wallpaperControls.querySelector("[data-wallpaper-intensity]").oninput = event => applyWallpaper({ intensity: event.target.value });
+        wallpaperControls.querySelector("[data-wallpaper-blur]").oninput = event => applyWallpaper({ blur: event.target.value });
+        wallpaperControls.querySelector("[data-wallpaper-brightness]").oninput = event => applyWallpaper({ brightness: event.target.value });
+        wallpaperControls.querySelector("[data-wallpaper-motion]").onchange = event => applyWallpaper({ motion: event.target.checked });
+        wallpaperControls.querySelector("[data-wallpaper-image]").onclick = () => applyWallpaper({ image: wallpaperControls.querySelector("[data-wallpaper-image-url]").value.trim() });
+        wallpaperControls.querySelector("[data-wallpaper-clear]").onclick = () => applyWallpaper({ image: "" });
+
         const profileTitle = sheetTitle("PROFILE");
         profileTitle.style.marginTop = "14px";
 
@@ -993,6 +927,9 @@ export default function Home() {
         children.push(lookTitle);
         children.push(accentLabel);
         children.push(themeChips);
+        children.push(wallpaperTitle);
+        children.push(wallpaperGrid);
+        children.push(wallpaperControls);
         children.push(profileTitle);
         children.push(profileRow);
         children.push(privacyTitle);

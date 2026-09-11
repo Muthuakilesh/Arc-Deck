@@ -1,6 +1,8 @@
 import mountChrome from "../js/chrome.js";
 import { iconMarkup } from "../components/icon.js";
 import { getFocusSession, pauseFocus, remainingSeconds, resetFocus, resumeFocus, startFocus } from "../js/focus.js";
+import { focusedApp } from "../js/apps.js";
+import state from "../js/state.js";
 
 const PRESETS = [
     { label: "5m", seconds: 5 * 60 },
@@ -16,11 +18,14 @@ const CLOCK_STYLE_KEY = "arcdeck.clockStyle";
 const CLOCK_24H_KEY = "arcdeck.clock24h";
 const CLOCK_SECONDS_KEY = "arcdeck.clockSeconds";
 const CLOCK_DATE_KEY = "arcdeck.clockDate";
+const CLOCK_DAY_KEY = "arcdeck.clockDay";
 const STANDBY_KEY = "arcdeck.clockStandby";
 const CLOCK_MOTION_KEY = "arcdeck.clockMotion";
 const CLOCK_DIM_KEY = "arcdeck.clockDim";
 const CLOCK_STYLES = [
-    { id: "digital", label: "Digital" },
+    { id: "digital", label: "Minimal" },
+    { id: "dashboard", label: "Dashboard" },
+    { id: "ring", label: "Progress ring" },
     { id: "flip", label: "Flip" },
     { id: "bedside", label: "Bedside" }
 ];
@@ -135,10 +140,10 @@ export default function ClockPage() {
 
     mountChrome();
     page.innerHTML = `
-        <section class="clock-hero glass card" data-clock-hero><p class="eyebrow">ARC FOCUS</p><time class="clock-time">--:--</time><p class="clock-date">Loading date…</p><p class="clock-standby-tip">Tap anywhere to exit standby</p></section>
-        <section class="focus-card glass card"><div><p class="eyebrow">FOCUS TIMER</p><h2 data-timer>25:00</h2></div><div class="focus-presets" data-presets></div><div class="focus-completion" data-completion hidden><button type="button" data-again>Start again</button><button type="button" data-break>Take a 5m break</button></div><div class="focus-presets" data-clock-styles></div><div class="focus-presets" data-clock-options></div><div class="focus-presets" data-clock-motions></div><label class="clock-dim-row" data-clock-dim-row><span>Standby Dim</span><input type="range" min="25" max="100" step="1" data-clock-dim><output data-clock-dim-value>70%</output></label><div class="focus-controls"><button type="button" class="icon-only-button" data-start></button><button type="button" class="icon-only-button" data-reset></button><button type="button" class="icon-only-button" data-focus></button></div><div class="focus-controls"><button type="button" class="icon-only-button" data-landscape></button><button type="button" class="icon-only-button" data-neon></button><button type="button" class="icon-only-button" data-standby></button></div><p data-status>Ready for a focused session.</p></section>`;
+        <section class="clock-hero glass card" data-clock-hero><div class="clock-hero-heading"><p class="eyebrow">ARC FOCUS / CLOCK</p><span class="clock-live-dot">LIVE</span></div><time class="clock-time">--:--</time><p class="clock-date">Loading date...</p><p class="clock-context" data-clock-context>Ready when you are.</p><p class="clock-standby-tip">Tap anywhere to exit standby</p></section>
+        <section class="focus-card glass card"><div class="focus-card-heading"><div><p class="eyebrow">FOCUS TIMER</p><h2 data-timer>25:00</h2></div><span class="focus-state" data-focus-state>READY</span></div><div class="focus-presets" data-presets></div><div class="focus-completion" data-completion hidden><button type="button" data-again>Start again</button><button type="button" data-break>Take a 5m break</button></div><details class="clock-settings"><summary>Clock settings</summary><div class="clock-settings-body"><p class="clock-setting-label">Display style</p><div class="focus-presets" data-clock-styles></div><p class="clock-setting-label">Display options</p><div class="focus-presets" data-clock-options></div><p class="clock-setting-label">Motion</p><div class="focus-presets" data-clock-motions></div><label class="clock-dim-row" data-clock-dim-row><span>Standby dim</span><input type="range" min="25" max="100" step="1" data-clock-dim><output data-clock-dim-value>70%</output></label></div></details><div class="focus-controls"><button type="button" class="icon-only-button" data-start></button><button type="button" class="icon-only-button" data-reset></button><button type="button" class="icon-only-button" data-focus></button></div><div class="focus-controls"><button type="button" class="icon-only-button" data-landscape></button><button type="button" class="icon-only-button" data-neon></button><button type="button" class="icon-only-button" data-standby></button></div><p data-status>Ready for a focused session.</p></section>`;
 
-    const time = page.querySelector(".clock-time"), date = page.querySelector(".clock-date"), timer = page.querySelector("[data-timer]"), start = page.querySelector("[data-start]"), status = page.querySelector("[data-status]"), presetRow = page.querySelector("[data-presets]"), completion = page.querySelector("[data-completion]"), clockStyleRow = page.querySelector("[data-clock-styles]"), clockOptionsRow = page.querySelector("[data-clock-options]"), clockMotionRow = page.querySelector("[data-clock-motions]"), clockDimRow = page.querySelector("[data-clock-dim-row]"), clockDimInput = page.querySelector("[data-clock-dim]"), clockDimValue = page.querySelector("[data-clock-dim-value]"), landscapeButton = page.querySelector("[data-landscape]"), neonButton = page.querySelector("[data-neon]"), standbyButton = page.querySelector("[data-standby]"), clockHero = page.querySelector("[data-clock-hero]");
+    const time = page.querySelector(".clock-time"), date = page.querySelector(".clock-date"), context = page.querySelector("[data-clock-context]"), focusState = page.querySelector("[data-focus-state]"), timer = page.querySelector("[data-timer]"), start = page.querySelector("[data-start]"), status = page.querySelector("[data-status]"), presetRow = page.querySelector("[data-presets]"), completion = page.querySelector("[data-completion]"), clockStyleRow = page.querySelector("[data-clock-styles]"), clockOptionsRow = page.querySelector("[data-clock-options]"), clockMotionRow = page.querySelector("[data-clock-motions]"), clockDimRow = page.querySelector("[data-clock-dim-row]"), clockDimInput = page.querySelector("[data-clock-dim]"), clockDimValue = page.querySelector("[data-clock-dim-value]"), landscapeButton = page.querySelector("[data-landscape]"), neonButton = page.querySelector("[data-neon]"), standbyButton = page.querySelector("[data-standby]"), clockHero = page.querySelector("[data-clock-hero]");
     let selectedPreset = loadPresetSeconds();
     let focusSession = getFocusSession();
     let remaining = focusSession && (focusSession.status === "active" || focusSession.status === "paused")
@@ -151,6 +156,7 @@ export default function ClockPage() {
     let use24Hour = loadFlag(CLOCK_24H_KEY, false);
     let showSeconds = loadFlag(CLOCK_SECONDS_KEY, false);
     let showDate = loadFlag(CLOCK_DATE_KEY, true);
+    let showDay = loadFlag(CLOCK_DAY_KEY, true);
     let standby = loadFlag(STANDBY_KEY, false);
     let clockMotion = loadClockMotion();
     let standbyDim = loadClockDim();
@@ -188,6 +194,8 @@ export default function ClockPage() {
         document.body.classList.toggle("arc-neon-clock", neon);
         document.body.classList.toggle("arc-clock-style-flip", clockStyle === "flip");
         document.body.classList.toggle("arc-clock-style-bedside", clockStyle === "bedside");
+        document.body.classList.toggle("arc-clock-style-dashboard", clockStyle === "dashboard");
+        document.body.classList.toggle("arc-clock-style-ring", clockStyle === "ring");
         document.body.classList.toggle("arc-standby-clock", standby);
         CLOCK_MOTIONS.forEach(motion => {
             document.body.classList.toggle(`arc-clock-motion-${motion.id}`, clockMotion === motion.id);
@@ -263,6 +271,17 @@ export default function ClockPage() {
                     updateClock();
                     drawClockOptions();
                     status.textContent = showDate ? "Date enabled." : "Date hidden.";
+                }
+            },
+            {
+                label: showDay ? "Day On" : "Day Off",
+                active: showDay,
+                onClick() {
+                    showDay = !showDay;
+                    saveFlag(CLOCK_DAY_KEY, showDay);
+                    updateClock();
+                    drawClockOptions();
+                    status.textContent = showDay ? "Day enabled." : "Day hidden.";
                 }
             }
         ];
@@ -387,8 +406,23 @@ export default function ClockPage() {
         });
 
         drawClockValue(clockText);
-        date.textContent = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+        date.textContent = now.toLocaleDateString([], { weekday: showDay ? "long" : undefined, month: "long", day: "numeric" });
         date.style.display = showDate ? "" : "none";
+        const focus = getFocusSession();
+        if (focus && (focus.status === "active" || focus.status === "paused")) {
+            const remaining = remainingSeconds(focus);
+            context.textContent = `${focus.status === "paused" ? "Paused" : "Focus"} · ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")} remaining`;
+            focusState.textContent = focus.status === "paused" ? "PAUSED" : "ACTIVE";
+        } else if (focusedApp()) {
+            context.textContent = `Active on PC · ${focusedApp().name}`;
+            focusState.textContent = "READY";
+        } else if (state.connected) {
+            context.textContent = `System · CPU ${Math.round(state.system.cpu || 0)}% · RAM ${Math.round(state.system.ram || 0)}%`;
+            focusState.textContent = "READY";
+        } else {
+            context.textContent = "Ready when you are.";
+            focusState.textContent = "OFFLINE";
+        }
         page.style.setProperty("--clock-hue", String((now.getSeconds() * 6 + now.getMinutes() * 2) % 360));
     };
     start.onclick = () => {
@@ -495,6 +529,8 @@ export default function ClockPage() {
             document.body.classList.remove("arc-neon-clock");
             document.body.classList.remove("arc-clock-style-flip");
             document.body.classList.remove("arc-clock-style-bedside");
+            document.body.classList.remove("arc-clock-style-dashboard");
+            document.body.classList.remove("arc-clock-style-ring");
             document.body.classList.remove("arc-standby-clock");
             CLOCK_MOTIONS.forEach(motion => {
                 document.body.classList.remove(`arc-clock-motion-${motion.id}`);

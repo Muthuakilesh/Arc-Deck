@@ -3,7 +3,7 @@
  * cached first, so a stale index.html could pin the phone to old modules with
  * no way to clear it short of deleting site data.
  */
-const CACHE = "arcdeck-v29";
+const CACHE = "arcdeck-v30";
 
 const SHELL = [
     "./",

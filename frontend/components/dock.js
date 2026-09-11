@@ -6,20 +6,34 @@ import { icon as renderIcon } from "./icon.js";
 // Seven equal buttons on a 320px screen is 45px each with no room for labels,
 // so the dock keeps the five pages reached most often and the rest move into
 // a sheet behind "More".
-const PRIMARY = [
+const BASE_PRIMARY = [
     { icon: "home", page: "home", label: "Home" },
     { icon: "apps", page: "apps", label: "Apps" },
     { icon: "media", page: "media", label: "Media" },
     { icon: "control", page: "control", label: "Control" }
 ];
 
-const OVERFLOW = [
+const BASE_OVERFLOW = [
+    { icon: "settings", page: "quick-settings", label: "Quick settings" },
     { icon: "scenes", page: "scenes", label: "Scenes" },
     { icon: "gamepad", page: "gamepad", label: "Gamepad" },
     { icon: "screen", page: "screen", label: "Screen" },
     { icon: "stats", page: "stats", label: "Stats" },
     { icon: "clock", page: "clock", label: "Clock" }
 ];
+
+const PERSONAL = [
+    { icon: "edit", page: "notes", label: "Notes" }
+];
+
+function navigation() {
+    const wide = window.matchMedia("(min-width: 720px)").matches;
+
+    return {
+        primary: wide ? [...BASE_PRIMARY.slice(0, 3), PERSONAL[0]] : BASE_PRIMARY,
+        overflow: wide ? [{ icon: "control", page: "control", label: "Control" }, ...BASE_OVERFLOW] : [...BASE_OVERFLOW, ...PERSONAL]
+    };
+}
 
 const HOLD_MS = 450;
 
@@ -108,12 +122,23 @@ function item(entry, className) {
 
 
 function openSheet() {
-    const title = sheetTitle("MORE");
+    const { overflow } = navigation();
+    const personal = overflow.filter(entry => PERSONAL.some(item => item.page === entry.page));
+    const tools = overflow.filter(entry => !personal.some(item => item.page === entry.page));
+    const title = sheetTitle("EXPLORE");
 
-    const grid = document.createElement("div");
-    grid.className = "sheet-grid";
+    const sections = [];
 
-    OVERFLOW.forEach(entry => {
+    const addSection = (label, entries) => {
+        if (!entries.length)
+            return;
+
+        const heading = sheetTitle(label);
+        heading.classList.add("sheet-section-title");
+        const grid = document.createElement("div");
+        grid.className = "sheet-grid";
+
+        entries.forEach(entry => {
         const button = item(entry, "sheet-item");
 
         if (router.current === entry.page)
@@ -125,7 +150,12 @@ function openSheet() {
         };
 
         grid.appendChild(button);
-    });
+        });
+        sections.push(heading, grid);
+    };
+
+    addSection("PERSONAL", personal);
+    addSection("TOOLS", tools);
 
     const themeTitle = sheetTitle("ACCENT");
     themeTitle.style.marginTop = "14px";
@@ -158,17 +188,19 @@ function openSheet() {
         themeGrid.appendChild(button);
     });
 
-    showSheet([title, grid, themeTitle, themeGrid]);
+    showSheet([title, ...sections, themeTitle, themeGrid]);
 }
 
 
 export default function Dock() {
     closeSheet();
+    const { primary, overflow } = navigation();
+    const breakpoint = window.matchMedia("(min-width: 720px)");
 
     const dock = document.createElement("div");
     dock.className = "glass card dock";
 
-    PRIMARY.forEach(entry => {
+    primary.forEach(entry => {
         const button = item(entry, "dock-item");
 
         button.onclick = () => {
@@ -182,7 +214,7 @@ export default function Dock() {
     const more = item({ icon: "more", page: "more", label: "More" }, "dock-item");
 
     // "More" is active whenever the visible page is one of the ones it holds.
-    if (OVERFLOW.some(entry => entry.page === router.current))
+    if (overflow.some(entry => entry.page === router.current))
         more.classList.add("active");
 
     more.onclick = () => {
@@ -193,6 +225,16 @@ export default function Dock() {
     };
 
     dock.appendChild(more);
+
+    const refreshForViewport = () => {
+        if (dock.parentNode)
+            dock.replaceWith(Dock());
+    };
+
+    if (breakpoint.addEventListener)
+        breakpoint.addEventListener("change", refreshForViewport, { once: true });
+    else
+        breakpoint.addListener(refreshForViewport);
 
     return dock;
 }

@@ -13,6 +13,7 @@ function buildScreen(resolve) {
             <p class="eyebrow">PAIR THIS PHONE</p>
             <h1>ArcDeck</h1>
             <p class="pin-hint">Enter the PIN shown in the ArcDeck window on your PC.</p>
+            <p class="pin-address" data-pin-address hidden></p>
             <input class="pin-input" type="tel" inputmode="numeric" autocomplete="one-time-code"
                 maxlength="8" placeholder="0000" aria-label="Pairing PIN">
             <button class="pin-submit" type="submit">Unlock</button>
@@ -23,6 +24,15 @@ function buildScreen(resolve) {
     const input = screen.querySelector(".pin-input");
     const submit = screen.querySelector(".pin-submit");
     const error = screen.querySelector(".pin-error");
+    const address = screen.querySelector("[data-pin-address]");
+
+    get("/status").then(data => {
+        const lan = data && Array.isArray(data.lan_addresses) ? data.lan_addresses[0] : "";
+        if (!lan)
+            return;
+        address.textContent = `Phone address: http://${lan}:5000`;
+        address.hidden = false;
+    });
 
     form.addEventListener("submit", async event => {
         event.preventDefault();
