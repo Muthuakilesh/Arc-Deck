@@ -1,0 +1,79 @@
+[
+  {
+    "name": "Chrome",
+    "path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "process": "chrome.exe",
+    "icon": "🌐",
+    "category": "apps",
+    "actions": [
+      { "label": "New tab", "command": "hotkey:ctrl+t" },
+      { "label": "Reopen tab", "command": "hotkey:ctrl+shift+t" },
+      { "label": "Address bar", "command": "hotkey:ctrl+l" },
+      { "label": "Fullscreen", "command": "hotkey:f11" },
+      { "label": "Open YouTube", "command": ["focus", "hotkey:ctrl+t", "delay:250", "type:youtube.com", "hotkey:enter"] }
+    ]
+  },
+  {
+    "name": "Discord",
+    "path": "C:\\Users\\%USERNAME%\\AppData\\Local\\Discord\\Update.exe",
+    "process": "Discord.exe",
+    "icon": "💬",
+    "category": "apps",
+    "actions": [
+      { "label": "Mute", "command": "hotkey:ctrl+shift+m" },
+      { "label": "Deafen", "command": "hotkey:ctrl+shift+d" }
+    ]
+  },
+  {
+    "name": "VSCode",
+    "path": "C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+    "process": "Code.exe",
+    "icon": "⌨️",
+    "category": "apps",
+    "actions": [
+      { "label": "Command palette", "command": "hotkey:ctrl+shift+p" },
+      { "label": "Run / debug", "command": "hotkey:f5" },
+      { "label": "Stop", "command": "hotkey:shift+f5" },
+      { "label": "Toggle terminal", "command": "hotkey:ctrl+`" }
+    ]
+  },
+  {
+    "name": "Steam",
+    "path": "C:\\Program Files (x86)\\Steam\\Steam.exe",
+    "process": "steam.exe",
+    "icon": "🎮",
+    "category": "games",
+    "actions": [
+      { "label": "Big Picture", "command": "hotkey:alt+enter" },
+      { "label": "Overlay", "command": ["focus", "hotkey:shift+tab"] }
+    ]
+  },
+  {
+    "name": "Epic Games",
+    "path": "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Epic Games Launcher.lnk",
+    "process": "EpicGamesLauncher.exe",
+    "icon": "⚡",
+    "category": "games"
+  },
+  {
+    "name": "Black Myth Wukong",
+    "path": "D:\\Games\\Black Myth - Wukong\\b1.exe",
+    "process": "b1-Win64-Shipping.exe",
+    "icon": "🐉",
+    "category": "games"
+  },
+  {
+    "name": "Elden Ring",
+    "path": "D:\\Games\\ELDEN RING\\Game\\ersc_launcher.exe",
+    "process": "eldenring.exe",
+    "icon": "⚔️",
+    "category": "games"
+  },
+  {
+    "name": "Nightreign",
+    "path": "D:\\Games\\Elden Ring Nightreign\\Game\\nrsc_launcher.exe",
+    "process": "nightreign.exe",
+    "icon": "🌙",
+    "category": "games"
+  }
+]

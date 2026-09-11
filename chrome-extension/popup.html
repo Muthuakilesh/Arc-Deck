@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ArcDeck Bridge</title>
+  <style>body{font:14px system-ui,sans-serif;margin:16px;width:260px;background:#111827;color:#f8fafc}label{display:block;margin:12px 0 4px}input,button{box-sizing:border-box;width:100%;padding:9px;border-radius:7px;border:1px solid #475569}input{background:#1e293b;color:inherit}button{margin-top:16px;background:#fb7185;color:#fff;border:0;font-weight:700}.hint,#status{font-size:12px;color:#cbd5e1;line-height:1.4}</style>
+</head>
+<body>
+  <strong>ArcDeck YouTube Bridge</strong>
+  <p class="hint">Pair this browser using the PIN shown by ArcDeck.</p>
+  <form id="pair">
+    <label for="server">ArcDeck address</label>
+    <input id="server" value="http://localhost:5000" required>
+    <label for="pin">Pairing PIN</label>
+    <input id="pin" inputmode="numeric" autocomplete="one-time-code" required>
+    <button>Pair browser</button>
+  </form>
+  <p id="status" role="status"></p>
+  <script src="popup.js"></script>
+</body>
+</html>
